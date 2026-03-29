@@ -26,7 +26,7 @@
 ├── main.cpp          # 프로그램 진입점 및 CLI 인터페이스
 ├── include/
 │   ├── cryptologic/
-│   │   ├── festiel.cpp/.h         # DES feistel 구조
+│   │   ├── festiel.cpp            # DES feistel 구조
 │   │   ├── DES.cpp                # DES 서브 구조 (IP, key scheduling, FP, etc...)
 │   │   ├── mode.cpp               # 블럭 암호 운용 모드 (CBC, OFB, CTR, etc...), 3DES 구조
 │   │   └──  cipher.cpp            # OFB 모드 선택 (변경 가능), 패리티 비트 set

@@ -11,6 +11,8 @@
 #include <cctype>
 using namespace std;
 
+const char VERSION[6] = "0.1.0";
+
 //Checking Function
 inline bool isValidPath(const std::string&);
 //Mutual Function

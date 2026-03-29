@@ -1,6 +1,7 @@
 ## 🛡️ File_Encryption_Program
 
-![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)
+![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+
 
 **File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)를 직접 구현하였으며, 멀티스레딩를 적용했습니다.
 

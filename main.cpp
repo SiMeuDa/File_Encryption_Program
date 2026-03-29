@@ -1,10 +1,9 @@
 /*
    		FILE EN/DECRYPTION PROGRAM
-		USED CIPHER LOGIC: DES
-		LATER, THIS PROGRAM'S CIPHER LOGIC WILL CHANGE FOR 3DES
+		USED CIPHER LOGIC: Triple DES
  */
-#include "src/cipher.h"
-#include "src/console/consolePrinter.h"
+#include "include/cryptologic/cipher.h"
+#include "include/interface/consolePrinter.h"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>

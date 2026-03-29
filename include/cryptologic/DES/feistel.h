@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../console/iprogress.h"
+#include "../../interface/iprogress.h"
 #include <vector>
 
 class feistel{

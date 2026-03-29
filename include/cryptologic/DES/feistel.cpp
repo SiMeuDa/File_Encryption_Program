@@ -1,6 +1,6 @@
 #include "feistel.h"
 #include <cstdint>
-#include "../console/iprogress.h"
+#include "../../interface/iprogress.h"
 #include <vector>
 
 //diffusion confusion

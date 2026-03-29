@@ -40,9 +40,12 @@
 
 ## 💻 Usage
 **빌드 방법**
-    * **[Main Program] **
+    * **[Main Program]**
+    
     * g++ -std=c++17 -pthread main.cpp include/cryptologic/*.cpp include/cryptologic/DES/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
+    
     * **[Test Program]**
+    
     * g++ test.cpp
 
 **실행 예시**

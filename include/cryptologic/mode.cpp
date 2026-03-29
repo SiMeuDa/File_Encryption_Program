@@ -3,10 +3,11 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <thread>
-#include <random>
-#include <chrono>
 #include <cstring>
+#include <thread>
+#include <chrono>
+#include <atomic>
+#include <random>
 
 void mode::secure_wipe(void* ptr, size_t len)
 {
@@ -114,6 +115,11 @@ std::vector<uint64_t> mode::ECB(std::string msg, uint64_t& key, uint64_t& key2)
 
     std::vector<uint64_t> result(total_blocks);
 
+	//for counting in multi thread env
+	//loading menu
+	std::atomic<size_t> completed_count(0);
+	
+
 	//check hardware's thread count
     unsigned int hw_threads = std::thread::hardware_concurrency();
 	    
@@ -122,9 +128,11 @@ std::vector<uint64_t> mode::ECB(std::string msg, uint64_t& key, uint64_t& key2)
 	//if block is smaller than thread, overhead exist
     if (total_blocks < static_cast<size_t>(num_threads))
         num_threads = static_cast<int>(total_blocks);
+
 	//vector for thread
     std::vector<std::thread> t;
-    size_t chunk_size = total_blocks / num_threads;
+    
+	size_t chunk_size = total_blocks / num_threads;
     size_t remainder = total_blocks % num_threads; 
 
     size_t current_start = 0;
@@ -135,14 +143,37 @@ std::vector<uint64_t> mode::ECB(std::string msg, uint64_t& key, uint64_t& key2)
         size_t start = current_start;
         size_t end = start + current_chunk;
 	//start threading
-        t.emplace_back([this, &imsg, &result, start, end, key, key2]() {
+	//lambda
+        t.emplace_back([this, &imsg, &result, start, end, key, key2, &completed_count]() {
 				for (size_t j = start; j < end; ++j)
+				{
+					//cipher logic
 					result[j] = this->cipher(this->decipher(this->cipher(imsg[j], key), key2), key);
+
+					//increase count
+					completed_count.fetch_add(1, std::memory_ordered_relaxed);
+				}
         });
 
-		//save end index
+		//update end index
         current_start = end; 
     }
+
+	//loading logic
+	if(m_callback)
+	{
+		while(completed_count < total_blocks)
+		{
+			double fraction = static_cast<double>(completed_count.load()) / total_blocks;
+
+			m_callback->update(fraction);
+			//10 fps limitation
+			std::this_thread::sleep_for(std::chrono::millisecond(100));
+		}
+
+		m_callback->updata(1.0);
+	}
+
 	//if it allow to join, join thread
     for (auto& it : t)
         if (it.joinable()) 
@@ -161,6 +192,10 @@ std::string mode::ECB(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
 
 	result.resize(total_blocks, 0);
 
+	//for counting in multi thread env
+	//loading menu
+	std::atomic<size_t> completed_count(0);
+	
 	//check hardware's thread count
     unsigned int hw_threads = std::thread::hardware_concurrency();
 	    
@@ -182,14 +217,34 @@ std::string mode::ECB(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
         size_t start = current_start;
         size_t end = start + current_chunk;
 	//start threading
-        t.emplace_back([this, &msg, &result, start, end, key, key2]() {
+        t.emplace_back([this, &msg, &result, start, end, key, key2, &completed_count]() {
 				for(size_t j = start; j < end; ++j)
+				{
 					result[j] = this->decipher(this->cipher(this->decipher(msg[j], key), key2), key);
+					//increase count
+					completed_count.fetch_add(1, std::memory_ordered_relaxed);
+				}
         });
 
 		//save end index
         current_start = end; 
     }
+
+	//loading logic
+	if(m_callback)
+	{
+		while(completed_count < total_blocks)
+		{
+			double fraction = static_cast<double>(completed_count.load()) / total_blocks;
+
+			m_callback->update(fraction);
+			//10 fps limitation
+			std::this_thread::sleep_for(std::chrono::millisecond(100));
+		}
+
+		m_callback->updata(1.0);
+	}
+
 	//if it allow to join, join thread
     for (auto& it : t)
         if (it.joinable()) 
@@ -204,16 +259,38 @@ std::vector<uint64_t> mode::CBC(std::string msg, uint64_t& key, uint64_t& key2)
 	
 	//change string to integer vector
 	imsg = to_integer(msg);
+	
 	//save IV for deciphering
 	imsg.insert(imsg.begin(), random());
+	
 	//take counter of block
 	size_t total_blocks = imsg.size();
+	
 	//exception handling
 	if(total_blocks == 0)
 		return imsg;
 
+	auto lastUpdateTime = std::chrono::steady_clock::now();
+
 	for(size_t i = 1; i < total_blocks; i++)
+	{
 		imsg[i] = this->cipher(this->decipher(this->cipher((imsg[i] ^ imsg[i - 1]), key), key2), key);
+		//check current time
+		auto currentTime = std::chrono::steady_clock::now();
+		
+		std::chrono::duration<double> elapsed = currentTime - lastUpdateTime;
+		//10 fps loading & block count loading
+		if(m_callback && (elapsed.count() >= 0.1 || i % (total_blocks / 10 + 1) == 0))
+		{
+			double fraction = static_cast<double>(i) / (total_blocks - 1);
+			m_callback->update(fraction);
+			//update time
+			lastUpdateTime = currentTime;
+		}
+	}
+
+	//explicitly print 100%
+	m_callback->update(1.0);
 
 	return imsg;
 }
@@ -235,6 +312,7 @@ std::string mode::CBC(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
 	//cause erase caculation
 	result.resize(total_blocks - 1, 0);
 	
+	auto lastUpdateTime = std::chrono::steady_clock::now();
 	for(size_t i = 0; i < total_blocks - 1; i++)
 	{
 		//save deciphered value
@@ -245,7 +323,22 @@ std::string mode::CBC(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
 			result[i] = (deciphered ^ msg[i - 1]);
 		else	//first xor with IV
 			result[i] = deciphered ^ IV;
+
+		//check current time
+		auto currentTime = std::chrono::steady_clock::now();
+		
+		std::chrono::duration<double> elapsed = currentTime - lastUpdateTime;
+		//10 fps loading & block count loading
+		if(m_callback && (elapsed.count() >= 0.1 || i % (total_blocks / 10 + 1) == 0))
+		{
+			double fraction = static_cast<double>(i) / (total_blocks - 1);
+			m_callback->update(fraction);
+			//update time
+			lastUpdateTime = currentTime;
+		}
 	}
+
+	m_callback->update(1.0);
 
 	//change integer vector to string
 	return from_integer(result);
@@ -265,9 +358,28 @@ std::vector<uint64_t> mode::CFB(std::string msg, uint64_t& key, uint64_t& key2)
 	if(total_blocks == 0)
 		return imsg;
 	
+	auto lastUpdateTime = std::chrono::steady_clock::now();
+
 	//xor with ciphered block
 	for(size_t i = 1; i < total_blocks; i++)
+	{
 		imsg[i] = this->cipher(this->decipher(this->cipher(imsg[i - 1], key), key2), key) ^ imsg[i];
+
+		//check current time
+		auto currentTime = std::chrono::steady_clock::now();
+		
+		std::chrono::duration<double> elapsed = currentTime - lastUpdateTime;
+		//10 fps loading & block count loading
+		if(m_callback && (elapsed.count() >= 0.1 || i % (total_blocks / 10 + 1) == 0))
+		{
+			double fraction = static_cast<double>(i) / (total_blocks - 1);
+			m_callback->update(fraction);
+			//update time
+			lastUpdateTime = currentTime;
+		}
+	}
+
+	m_callback->update(1.0);
 
 	return imsg;
 }
@@ -282,10 +394,27 @@ std::string mode::CFB(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
 		return " ";
 
 	result.resize(total_blocks - 1, 0);
+	
+	auto lastUpdateTime = std::chrono::steady_clock::now();
+
 	//same cipher logic (CFB standard)
 	for(size_t i = 1; i < total_blocks; i++)
+	{
 		result[i - 1] = this->cipher(this->decipher(this->cipher(msg[i - 1], key), key2), key) ^ msg[i];
-
+	
+		//check current time
+		auto currentTime = std::chrono::steady_clock::now();
+		
+		std::chrono::duration<double> elapsed = currentTime - lastUpdateTime;
+		//10 fps loading & block count loading
+		if(m_callback && (elapsed.count() >= 0.1 || i % (total_blocks / 10 + 1) == 0))
+		{
+			double fraction = static_cast<double>(i) / (total_blocks - 1);
+			m_callback->update(fraction);
+			//update time
+			lastUpdateTime = currentTime;
+		}
+	}
 	return from_integer(result);
 }
 
@@ -388,6 +517,10 @@ std::vector<uint64_t> mode::CTR(std::string msg, uint64_t& key, uint64_t& key2)
 	//take uint64_t random value
 	uint64_t counter = random();
 
+	//for counting in multi thread env
+	//loading menu
+	std::atomic<size_t> completed_count(0);
+	
 	//check hardware's thread count
     unsigned int hw_threads = std::thread::hardware_concurrency();
 	    
@@ -409,14 +542,32 @@ std::vector<uint64_t> mode::CTR(std::string msg, uint64_t& key, uint64_t& key2)
         size_t start = current_start;
         size_t end = start + current_chunk;
 	//start threading
-        t.emplace_back([this, &imsg, &result, start, end, key, key2, &counter]() {
+        t.emplace_back([this, &imsg, &result, start, end, key, key2, &counter, &completed_count]() {
 				for(size_t j = start; j < end; ++j)
+				{
 					result[j] = imsg[j] ^ this->cipher(this->decipher(this->cipher(counter++, key), key2), key);
+					//increase count
+					completed_count.fetch_add(1, std::memory_ordered_relaxed);
+				}
         });
 
 		//save end index
         current_start = end; 
     }
+	//loading logic
+	if(m_callback)
+	{
+		while(completed_count < total_blocks)
+		{
+			double fraction = static_cast<double>(completed_count.load()) / total_blocks;
+
+			m_callback->update(fraction);
+			//10 fps limitation
+			std::this_thread::sleep_for(std::chrono::millisecond(100));
+		}
+
+		m_callback->updata(1.0);
+	}
 	//if it allow to join, join thread
     for (auto& it : t)
         if (it.joinable()) 
@@ -445,6 +596,10 @@ std::string mode::CTR(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
 
 	result.resize(total_blocks, 0);
 
+	//for counting in multi thread env
+	//loading menu
+	std::atomic<size_t> completed_count(0);
+	
 	//check hardware's thread count
     unsigned int hw_threads = std::thread::hardware_concurrency();
 	    
@@ -466,14 +621,32 @@ std::string mode::CTR(std::vector<uint64_t> msg, uint64_t& key, uint64_t& key2)
         size_t start = current_start;
         size_t end = start + current_chunk;
 	//start threading
-        t.emplace_back([this, &msg, &result, start, end, key, key2, &counter]() {
+        t.emplace_back([this, &msg, &result, start, end, key, key2, &counter, &completed_count]() {
 				for(size_t j = start; j < end; ++j)
+				{
 					result[j] = msg[j] ^ this->cipher(this->decipher(this->cipher(counter++, key), key2), key);
+					//increase count
+					completed_count.fetch_add(1, std::memory_ordered_relaxed);
+				}
         });
 
 		//save end index
         current_start = end; 
     }
+	//loading logic
+	if(m_callback)
+	{
+		while(completed_count < total_blocks)
+		{
+			double fraction = static_cast<double>(completed_count.load()) / total_blocks;
+
+			m_callback->update(fraction);
+			//10 fps limitation
+			std::this_thread::sleep_for(std::chrono::millisecond(100));
+		}
+
+		m_callback->updata(1.0);
+	}
 	//if it allow to join, join thread
     for (auto& it : t)
         if (it.joinable()) 

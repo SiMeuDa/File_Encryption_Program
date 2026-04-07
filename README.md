@@ -1,6 +1,6 @@
 ## 🛡️ File_Encryption_Program
 
-![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 
 
 **File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)를 직접 구현하였으며, 멀티스레딩를 적용했습니다.
@@ -29,10 +29,17 @@
 ├── main.cpp          # 프로그램 진입점 및 CLI 인터페이스
 ├── include/
 │   ├── cryptologic/
-│   │   ├── festiel.cpp            # DES feistel 구조
-│   │   ├── DES.cpp                # DES 서브 구조 (IP, key scheduling, FP, etc...)
-│   │   ├── mode.cpp               # 블럭 암호 운용 모드 (CBC, OFB, CTR, etc...), 3DES 구조
-│   │   └──  cipher.cpp            # OFB 모드 선택 (변경 가능), 패리티 비트 set
+│   │   ├── DES/		           
+│   │   │   ├── festiel.cpp        # DES feistel 구조
+│   │   │   └── DES.cpp            # DES 서브 구조 (IP, key scheduling, FP, etc...)
+│   │   ├── mode/	           
+│   │   │   ├── mode.cpp           # 블럭 암호 운용 모드 기본구조
+│   │   │   ├── ECB.cpp            # Electric CodeBook mode
+│   │   │   ├── CBC.cpp            # Chain Block Chaining mode
+│   │   │   ├── CFB.cpp            # Cipher FeedBack mode
+│   │   │   ├── OFB.cpp            # Output FeedBack mode
+│   │   │   └── CTR.cpp            # CounTeR mode
+│   │   └──  crypto.cpp            # 암호화 가상함수, 패리티 비트 set
 │   └── interface/
 │       ├── consolePrinter.cpp     # 로딩 CLI 메인함수
 │       └──  iprogress.h           # 로딩 CLI 가상함수
@@ -46,7 +53,7 @@
 
     [Main Program]
     
-    g++ -std=c++17 -pthread main.cpp include/cryptologic/*.cpp include/cryptologic/DES/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
+    g++ -std=c++17 -pthread main.cpp include/cryptologic/crypto.cpp include/cryptologic/DES/*.cpp include/cryptologic/mode/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
     
     [Test Program]
     

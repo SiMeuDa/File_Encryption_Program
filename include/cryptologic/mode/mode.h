@@ -1,11 +1,11 @@
 #pragma once
-#include "DES/DES.h"
+#include "../DES/DES.h"
 #include <cstdint>
 #include <vector>
 #include <string>
 
 class mode : public DES{
-private:
+protected:
 	constexpr static int block_len = 8;
 	//Secure memset
 	void secure_wipe(void*, size_t);
@@ -15,15 +15,19 @@ private:
 	//after unpadding size
 	size_t real_size(const std::vector<uint64_t>& msg);
 	//return random value(64bit size)
-	inline uint64_t random(void);
+	uint64_t random(void);
 
 	//change msg to integer msg(vector)
 	std::vector<uint64_t> to_integer(std::string);
 	//change integer msg(vector> to msg
 	std::string from_integer(std::vector<uint64_t>);
-protected:
+public:
 	mode()	{};
-	~mode() {};
+	virtual ~mode() {}
+	virtual std::vector<uint64_t> encrypt_mode(std::string, uint64_t&, uint64_t&){ std::vector<uint64_t> empty; return empty; }
+	virtual std::string decrypt_mode(std::vector<uint64_t>, uint64_t&, uint64_t&){ std::string empty; return empty; }
+
+/*
 	//Electric CodeBook mode
 	std::vector<uint64_t> ECB(std::string, uint64_t&, uint64_t&);
 	std::string ECB(std::vector<uint64_t>, uint64_t&, uint64_t&);
@@ -39,5 +43,5 @@ protected:
 	//CounTeR
 	std::vector<uint64_t> CTR(std::string, uint64_t&, uint64_t&);
 	std::string CTR(std::vector<uint64_t>, uint64_t&, uint64_t&);
-
+*/
 };

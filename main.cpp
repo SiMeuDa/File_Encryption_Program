@@ -2,7 +2,15 @@
    		FILE EN/DECRYPTION PROGRAM
 		USED CIPHER LOGIC: Triple DES
  */
-#include "include/cryptologic/cipher.h"
+
+#include "include/cryptologic/crypto.h"
+//operation mode
+#include "include/cryptologic/mode/mode.h"
+#include "include/cryptologic/mode/ECB.h"
+#include "include/cryptologic/mode/CBC.h"
+#include "include/cryptologic/mode/CFB.h"
+#include "include/cryptologic/mode/OFB.h"
+#include "include/cryptologic/mode/CTR.h"
 #include "include/interface/consolePrinter.h"
 #include <stdexcept>
 #include <iostream>
@@ -11,7 +19,7 @@
 #include <cctype>
 using namespace std;
 
-const char VERSION[6] = "0.1.1";
+const char VERSION[6] = "0.2.0";
 
 //Checking Function
 inline bool isValidPath(const std::string&);
@@ -27,7 +35,10 @@ inline void writeValue(const char*, const std::string&);
 int main(int argc, char* argv[])
 {
 	ConsolePrinter printer;
-	cipher c;
+	//for select mode -> test case = oFVB
+	mode* m = new OFB();
+	if(m == nullptr)
+		return -1;
 	uint64_t key, key2;
 	string str;
 
@@ -37,11 +48,14 @@ int main(int argc, char* argv[])
 		chckArgu(argc, argv);
 
 		//set loading console
-		c.setProgressCallback(&printer);
+		m->setProgressCallback(&printer);
 
 		//take key
 		//If OverFlow or Invalid Value, throw exception
 		takeKey(argc, argv, key, key2);
+		
+		m->setParity(key);
+		m->setParity(key2);
 		
 		//check cryption argument
 		if(argv[2] == "1"sv)
@@ -49,9 +63,9 @@ int main(int argc, char* argv[])
 			
 			//read value from file
 			readValue(argv[4], str);
-	
+			
 			//encrypt logic
-			std::vector<uint64_t> vecResult = c.encryption(str, key, key2);
+			std::vector<uint64_t> vecResult = (m->encrypt_mode(str, key, key2));
 			if(vecResult.empty())
 				throw std::length_error("[Length Error]: Failed to Encrypt File");
 
@@ -69,7 +83,7 @@ int main(int argc, char* argv[])
 			readValue(argv[4], vecInput);
 
 			//decrypt logic
-			str = c.decryption(vecInput, key, key2);
+			str = m->decrypt_mode(vecInput, key, key2);
 			if(str.empty())
 				throw std::length_error("[Length Error]: Failed to Decrypt File");
 
@@ -85,6 +99,8 @@ int main(int argc, char* argv[])
 		cerr << printer.BOLD << printer.RED << "[Error]: " << e.what() << printer.RESET << endl;
 		return -1;
 	}
+
+	delete m;
 
 	return 0;
 }

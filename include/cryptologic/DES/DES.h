@@ -3,8 +3,9 @@
 #include <vector>
 #include <string>
 #include "feistel.h"
+#include "../crypto.h"
 
-class DES : public feistel{
+class DES : public feistel, public crypto {
 private:
 	bool chkParity(uint64_t);
 	std::vector<uint64_t> subKey;
@@ -24,7 +25,7 @@ private:
 protected:
 	//Make Sub Key vector
 	DES() { subKey.resize(16);	}
-	uint64_t cipher(uint64_t, uint64_t);
-	uint64_t decipher(uint64_t, uint64_t);
+	uint64_t cipher(uint64_t, uint64_t) override;
+	uint64_t decipher(uint64_t, uint64_t) override;
 	~DES() {}
 };

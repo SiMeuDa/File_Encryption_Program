@@ -8,7 +8,7 @@ private:
 //key scheduled for 16 -> feistel cac 16 times
 	static constexpr int repeat = 16;
 //diffusion & confusion & key mix => main function
-	uint32_t F(uint32_t, uint64_t);
+	inline uint32_t F(uint32_t, uint64_t);
 protected:
 	feistel() {};
 	~feistel(){};

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <string_view>
 
 class mode : public DES{
 protected:
@@ -18,7 +19,7 @@ protected:
 	uint64_t random(void);
 
 	//change msg to integer msg(vector)
-	std::vector<uint64_t> to_integer(std::string);
+	std::vector<uint64_t> to_integer(std::string_view);
 	//change integer msg(vector> to msg
 	std::string from_integer(std::vector<uint64_t>);
 public:

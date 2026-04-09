@@ -4,7 +4,7 @@
 #include <vector>
 
 //diffusion confusion
-uint32_t feistel::F(uint32_t R, uint64_t subkey)
+inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 {
 	//32bit -> 48bit
 	//each column has 6 -> prevent duplicate

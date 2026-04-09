@@ -9,13 +9,13 @@ bool DES::chkParity(uint64_t key)
 	for (int i = 0; i < 8; i++)
     {
     	uint8_t group = (key >> (i * 8)) & 0xFF;
-		//count 8bit's 1
- 	    int ones = std::bitset<8>(group).count();
-		//if count odd, it is ok		
-       	bool parity = (ones % 2 == 1) ? 1 : 0;
+		
+		group ^= group >> 4;
+		group ^= group >> 2;
+		group ^= group >> 1;
 
-       if(parity == 0)
-		   return false;
+		if((group & 1) == 0)
+        	return false;
     }
 
 	return true;
@@ -58,9 +58,6 @@ uint64_t DES::IP(uint64_t msg)
 
 bool DES::keySchedule(uint64_t key)
 {
-	//check Parity Bit
-	if(!chkParity(key))
-		return false;
 	//Standard Table
 	int pc1_Ctable[28] = {
 		57, 49, 41, 33, 25, 17,  9,

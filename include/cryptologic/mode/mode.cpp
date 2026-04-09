@@ -8,6 +8,7 @@
 #include <chrono>
 #include <atomic>
 #include <random>
+#include <string_view>
 
 void mode::secure_wipe(void* ptr, size_t len)
 {
@@ -57,11 +58,8 @@ uint64_t mode::random(void)
 	return result;
 }
 
-std::vector<uint64_t> mode::to_integer(std::string msg)
+std::vector<uint64_t> mode::to_integer(std::string_view msg)
 {
-	//first do padding
-	msg = padding(msg);
-	
 	//save char to integer result
 	std::vector<uint64_t> result;
 	
@@ -76,7 +74,7 @@ std::vector<uint64_t> mode::to_integer(std::string msg)
 	//shift 8 * (8 - j - 1)
 	for(int i = 0; i < block_count; i++)
 		for(int j = 0; j < block_len; j++)
-			result.at(i) |= (static_cast<uint64_t>(static_cast<unsigned char>(msg[block_len * i + j])) << ((sizeof(uint64_t) / sizeof(char)) * (block_len - j - 1)));
+			result[i] |= (static_cast<uint64_t>(static_cast<unsigned char>(msg[block_len * i + j])) << ((sizeof(uint64_t) / sizeof(char)) * (block_len - j - 1)));
 
 	return result;
 }

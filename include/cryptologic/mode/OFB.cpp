@@ -13,7 +13,12 @@
 std::vector<uint64_t> OFB::encrypt_mode(std::string msg, uint64_t& key, uint64_t& key2)
 {
         std::vector<uint64_t> imsg;
+		//check pariy bit
+		if(chkParity(key) && chkParity(key2))
+			return imsg;
 
+		//do padding
+		msg = padding(msg);
         //change string to integer vector
         imsg = to_integer(msg);
         //insert IV

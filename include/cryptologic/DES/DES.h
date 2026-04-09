@@ -7,7 +7,6 @@
 
 class DES : public feistel, public crypto {
 private:
-	bool chkParity(uint64_t);
 	std::vector<uint64_t> subKey;
 //Left Circular Shift
 	uint32_t LCS(uint32_t, size_t);
@@ -27,5 +26,6 @@ protected:
 	DES() { subKey.resize(16);	}
 	uint64_t cipher(uint64_t, uint64_t) override;
 	uint64_t decipher(uint64_t, uint64_t) override;
+	bool chkParity(uint64_t);
 	~DES() {}
 };

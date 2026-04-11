@@ -4,6 +4,7 @@
 *.app
 *.o
 *.obj
+*.gch
 bin/
 build/
 Debug/

@@ -24,6 +24,8 @@ x86/
 test_*.txt
 input_data.txt
 google_source.txt
+random*.bin
+callgrind.out.*
 temp/
 
 # --- 시스템 파일 ---

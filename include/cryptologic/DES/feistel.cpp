@@ -86,6 +86,7 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	uint64_t eboxRes = 0;
 	
 	//extend to 48 bit
+	//overhead
 	for(int i = 0; i < 48; i++)	// << 15 + ebox_table[i] - i
 		eboxRes |= ((uint64_t)((R >> (32 - ebox_table[i])) & 1) << (47 - i));
 
@@ -117,6 +118,7 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	
 
 	//set P box
+	//overhead
 	for(int i = 0; i < 32; i++)
 		pboxRes |= (((sboxRes >> (32 - P_BOX[i])) & 1) << (31 - i));
 

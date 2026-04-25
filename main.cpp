@@ -19,7 +19,7 @@
 #include <cctype>
 using namespace std;
 
-const char VERSION[6] = "0.2.0";
+const char VERSION[6] = "0.2.2";
 
 //Checking Function
 inline bool isValidPath(const std::string&);
@@ -33,7 +33,7 @@ inline void writeValue(const char*, const std::vector<uint64_t>&);
 inline void writeValue(const char*, const std::string&);
 
 int main(int argc, char* argv[])
-{
+/
 	ConsolePrinter printer;
 	//for select mode -> test case = oFVB
 	mode* m = new OFB();

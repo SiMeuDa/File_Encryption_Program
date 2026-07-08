@@ -21,11 +21,9 @@ using namespace std;
 
 const char VERSION[6] = "0.2.2";
 
-//Checking Function
-inline bool isValidPath(const std::string&);
 //Mutual Function
-inline void chckArgu(int, char**);
-inline void takeKey(int, char**, uint64_t&, uint64_t&);
+inline void takeKey(char*, char*, uint64_t&, uint64_t&);
+inline void chckArgu(int, char**, uint8_t& []);
 //Divided to En/De Function
 inline void readValue(const char*, std::string&);
 inline void readValue(const char*, std::vector<uint64_t>&);
@@ -33,27 +31,29 @@ inline void writeValue(const char*, const std::vector<uint64_t>&);
 inline void writeValue(const char*, const std::string&);
 
 int main(int argc, char* argv[])
-/
+{
 	ConsolePrinter printer;
 	//for select mode -> test case = oFVB
 	mode* m = new OFB();
 	if(m == nullptr)
 		return -1;
+	//en, f, key, mode
+	uint8_t argu_index[4];
 	uint64_t key, key2;
 	string str;
 
 	try{
 		//check Argument
 		//If Invalid Argument, throw exception
-		chckArgu(argc, argv);
+		chckArgu(argc, argv, argu_index);
 
 		//set loading console
 		m->setProgressCallback(&printer);
 
 		//take key
-		//If OverFlow or Invalid Value, throw exception
-		takeKey(argc, argv, key, key2);
-		
+		takeKey(argv[argu_index[2]], argv[argu_index[2] + 1], key, key2);
+
+		//set Parity for DES
 		m->setParity(key);
 		m->setParity(key2);
 		
@@ -105,34 +105,22 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-inline bool isValidPath(const std::string& path)
-{//check whether file path is valid
-    return access(path.c_str(), F_OK) == 0;
-}
-
-inline void chckArgu(int argc, char** argv)
-{
-	//isEncryption: 1, filePath: 1, key: 1
-	if(((argc == 7) || (argc == 8)) && (argv[3] == "-f"sv) && (argv[5] == "-k"sv) && (argv[1] == "-en"sv))
-	{//Standard DES section
-	//foam: ./[file_name] -en [1/0] -f [file_path] -k [key]
-		if(!isValidPath(argv[4]))
-			throw std::invalid_argument("[Invalid Input]: Wrong File Path");
-	}
-	else	//Invalid parameter input
-		throw invalid_argument("Invalid Input\n\033[0m\033[1m[Usage]: ./[file_name] -en [1/0] -f [file_path] -k [key] ([key2])");
-}
-
-inline void takeKey(int argc, char** argv, uint64_t& key, uint64_t& key2)
+inline void takeKey(char* strKey, char* strKey2, uint64_t& key, uint64_t& key2)
 {
 		//UINT64_MAX = 18,446,744,073,709,551,615 = 0xFFFFFFFFFFFFFFFF
 		try{
-			key = stoull(argv[6]);
+			key = stoull(strKey);
 
-			if(argc == 8)
-				key2 = stoull(argv[7]);
-			else if(argc == 7)
+			//take key2
+			try{
+				key2 = stoull(strKey2);
+			}//there is no key2
+			catch(const invalid_argument& e){ 
 				key2 = key;
+			}//something else error
+			catch(const std::exception& e){
+				throw e;
+			}
 
 		}catch(const out_of_range& e)
 		{
@@ -147,6 +135,53 @@ inline void takeKey(int argc, char** argv, uint64_t& key, uint64_t& key2)
 			throw invalid_argument("[Invalid Input]: Key Value must be ULL Type");
 		}
 }
+
+inline void chckArgu(int argc, char** argv, uint8_t& argu[])
+{
+	//check argument bool array
+	bool chck[4] = {false, false, false, false};
+
+	//isEncryption: 1, filePath: 1, key: 1
+	if((argc == 7) || (argc == 8))
+	{//Standard DES section
+	//foam: ./[file_name] -en [1/0] -f [file_path] -k [key]
+		for(int i = 1; i < argc; i++)
+		{
+			//encryption or decryption
+			if(argv[i] == "-en"sv)
+			{
+				if((argv[i + 1] != "1"sv) (argv[i + 1] != "0"sv))
+					throw std::invalid_argument("[Invalid Input]: -en argument must be 1 or 0");
+				
+				chck[0] = true;
+				argu[0] = i + 1;
+			}
+			//encrypt file path
+			else if(argv[i] == "-f"sv)
+			{
+				if(access(argv[i + 1], F_OK) != 0)
+					throw std::invalid_argument("[Invalid Input]: Wrong File Path");
+				
+				chck[1] = true;
+				argu[1] = i + 1;
+			}
+			//logic key
+			else if(argv[i] == "-k")
+			{
+				chck[2] = true;
+				argu[2] = i + 1;
+			}
+				
+		}
+
+		for(int i = 0; i < 3; i++)
+			if(chck[i] == false)
+				throw invalid_argument("Invalid Argument\n\033[0m\033[1m[Usage]: ./[file_name] -en [1/0] -f [file_path] [key] [key2]");
+	}
+	else	//Invalid parameter input
+		throw invalid_argument("Missing Operand\n\033[0m\033[1m[Usage]: ./[file_name] -en [1/0] -f [file_path] -k [key] [key2]");
+}
+
 
 //ENCRYPTION LOGIC
 inline void readValue(const char* path, std::string& str)

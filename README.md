@@ -53,7 +53,7 @@
 
     [Main Program]
     
-    g++ -std=c++17 -pthread main.cpp include/cryptologic/crypto.cpp include/cryptologic/DES/*.cpp include/cryptologic/mode/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
+    g++ main.cpp include/cryptologic/crypto.cpp include/cryptologic/DES/*.cpp include/cryptologic/mode/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
     
     [Test Program]
     

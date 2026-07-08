@@ -24,7 +24,7 @@ std::vector<uint64_t> ECB::encrypt_mode(std::string msg, uint64_t& key, uint64_t
 
         //for counting in multi thread env
         //loading menu
-        std::atomic<size_t> completed_count(0);
+    std::atomic<size_t> completed_count(0);
 
 
         //check hardware's thread count

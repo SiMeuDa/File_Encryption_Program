@@ -89,6 +89,7 @@ bool DES::keySchedule(uint64_t key)
 		51, 45, 33, 48, 44, 49, 39, 56,
 		34, 53, 46, 42, 50, 36, 29, 32
 		};
+	
 	uint64_t result = 0;
 	uint64_t temp = 0;
 	uint32_t C = 0, D = 0;

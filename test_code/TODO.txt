@@ -1,0 +1,2 @@
+1. make main.cpp
+2. make template for cryptologic in mode file

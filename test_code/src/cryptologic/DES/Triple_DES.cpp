@@ -16,18 +16,18 @@ Triple_DES::Triple_DES(uint64_t key, uint64_t key2 = 0)
 uint64_t Triple_DES::cipher(uint64_t msg)
 {
 
-	des[0]->cipher(msg);
-	des[1]->decipher(msg);
-	des[0]->cipher(msg);
+	msg = des[0]->cipher(msg);
+	msg = des[1]->decipher(msg);
+	msg = des[0]->cipher(msg);
 
 	return msg;
 }
 
 uint64_t Triple_DES::decipher(uint64_t msg)
 {
-	des[0]->decipher(msg);
-	des[1]->cipher(msg);
-	des[0]->decipher(msg);
+	msg = des[0]->decipher(msg);
+	msg = des[1]->cipher(msg);
+	msg = des[0]->decipher(msg);
 
 	return msg;
 }

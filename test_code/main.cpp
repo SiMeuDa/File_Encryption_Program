@@ -1,218 +1,199 @@
-/*
-   		FILE EN/DECRYPTION PROGRAM
-		USED CIPHER LOGIC: Triple DES
- */
-
-#include "cryptologic/crypto.h"
-//operation mode
+#include "cryptologic/crypto.h" 
+#include "cryptologic/DES/DES.h"
 #include "cryptologic/mode/mode.h"
-#include "cryptologic/mode/CTR.h"
-#include "interface/consolePrinter.h"
-#include <stdexcept>
+#include "cryptologic/mode/CBC.h"
 #include <iostream>
 #include <fstream>
-#include <unistd.h> 
-#include <cctype>
-using namespace std;
+#include <vector>
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <stdexcept>
+#include <memory>
+namespace fs = std::filesystem;
 
-const char VERSION[6] = "0.2.2";
+enum class menuOption { 
+	MAIN = 0, CRYPTO_LOGIC, OP_MODE,
+	SETTING = 9 
+};
+enum class cryptoLogic {
+	DES = 0, Triple_DES, AES
+};
+bool setPath(fs::path& p);
+void Menu(int& choice, menuOption option);
 
-//Mutual Function
-inline void takeKey(char*, char*, uint64_t&, uint64_t&);
-//Divided to En/De Function
-inline void readValue(const char*, std::string&);
-inline void readValue(const char*, std::vector<uint64_t>&);
-inline void writeValue(const char*, const std::vector<uint64_t>&);
-inline void writeValue(const char*, const std::string&);
-
-int main(int argc, char* argv[])
+int main(void)
 {
-	ConsolePrinter printer;
-	//for select mode -> test case = oFVB
-	mode* m = new CTR();
-	if(m == nullptr)
-		return -1;
-	//en, f, key, mode
-	uint8_t argu_index[4];
-	uint64_t key, key2;
-	string str;
-
-	try{
-
-		//set loading console
-		m->setProgressCallback(&printer);
-
-		//take key
-		takeKey(argv[argu_index[2]], argv[argu_index[2] + 1], key, key2);
-
-		//set Parity for DES
-		m->setParity(key);
-		m->setParity(key2);
-		
-		//check cryption argument
-		if(argv[2] == "1"sv)
-		{//Encryption
-			
-			//read value from file
-			readValue(argv[4], str);
-			
-			//encrypt logic
-			std::vector<uint64_t> vecResult = (m->encrypt_mode(str, key, key2));
-			if(vecResult.empty())
-				throw std::length_error("[Length Error]: Failed to Encrypt File");
-
-			//write value to file
-			writeValue(argv[4], vecResult);
-
-			clog << printer.BOLD << printer.BLUE << "[SYSTEM]: SUCCESS TO ENCRYPT FILE" << printer.RESET << endl;
-		}
-		else if(argv[2] == "0"sv)
-		{//Decryption
-			
-			std::vector<uint64_t> vecInput;
-
-			//read value from file
-			readValue(argv[4], vecInput);
-
-			//decrypt logic
-			str = m->decrypt_mode(vecInput, key, key2);
-			if(str.empty())
-				throw std::length_error("[Length Error]: Failed to Decrypt File");
-
-			//write value to file
-			writeValue(argv[4], str);
-
-			clog << printer.BOLD << printer.BLUE << "[SYSTEM]: SUCCESS TO DECRYPT FILE" << printer.RESET << endl;
-		}
-		else	//Invalid Data Type
-				throw std::invalid_argument("[Invalid Input]: -en argument must be 1 or 0");
-	}catch(const std::exception& e)
+	fs::path p;
+	int choice = 0;
+	uint64_t key = 0, key2 = 0;
+	bool isSetFile = false, isEncryption = true;
+	mode* op_mode;
+	cryptoLogic cLog;
+#ifdef LOG
+	std::clog << "[SYSTEM] Start File En/Decryption Program" << std::endl;
+	std::clog << "[SYSTEM] Checking En/Decryption Logic" << std::endl;
+#endif
+	//Add Crypto Logic Checking using log
+	
+	
+	while(true)
 	{
-		cerr << printer.BOLD << printer.RED << "[Error]: " << e.what() << printer.RESET << endl;
-		return -1;
-	}
+		Menu(choice, menuOption::MAIN);
 
-	delete m;
+		if((choice == 1) or (choice == 2))
+		{
+		//En/Decryption on path file
+			if(!isSetFile){
+				std::cout << "[ERROR] Please set file path on Settings(8)" << std::endl;
+				continue;
+			}
+		
+			if(choice == 1)
+				isEncryption = true;
+			else if(choice == 2)
+				isEncryption = false;
+			//set Crypto Logic(DES, Triple DES, AES, etc..)
+			Menu(choice, menuOption::CRYPTO_LOGIC);
+
+			cLog = static_cast<cryptoLogic>(choice - 1);
+			//set Key Logic
+			std::cout << "Key Input: ";
+			std::cin >> key;
+			if(cLog == cryptoLogic::Triple_DES){
+				std::cout << "Key 2 Input: ";
+				std::cin >> key2;
+			}
+
+			Menu(choice, menuOption::OP_MODE);
+
+
+			if(isEncryption)
+			{
+				std::cout << "DO Encryption" << std::endl;
+			}
+			else
+			{
+				std::cout << "DO Decryption" << std::endl;
+			}
+
+		}else if(choice == 8){
+		//Setting
+			Menu(choice, menuOption::SETTING);
+			
+			if(choice == 1){
+				if(!isSetFile){
+					std::cout << "[ERROR] There is no set file path";
+				}else{
+					std::cout << "Now Set File Path: " << fs::canonical(p);
+				}
+				std::cout << std::endl;
+			}else if(choice == 2){
+			//Setting file path
+				while(!setPath(p));
+				isSetFile = true;
+			
+			}else if(choice == 3){
+			//Diagonsis Crypto Logic
+#ifdef LOG
+				std::clog << "[SYSTEM] On Programming" << std::endl;
+#endif
+			}else if(choice == 4){
+			//print out program information			
+#ifdef LOG
+				std::clog << "[SYSTEM] On Programming" << std::endl;
+#endif
+			}else if(choice != 9){
+				//to do not disturb printing main menu, use cout(not cerr)
+				std::cout << "[ERROR] Please Select Number On Menu" << std::endl;
+			}
+		}else if(choice == 9){
+		//Terminate Program
+			std::cout << "[SYSTEM] Terminate Program...\n" << std::endl;
+			break;
+		}else{
+			//to do not disturb printing main menu, use cout(not cerr)
+			std::cout << "[ERROR] Please Select Number On Menu" << std::endl;
+		}
+	}
 
 	return 0;
 }
 
-inline void takeKey(char* strKey, char* strKey2, uint64_t& key, uint64_t& key2)
+bool setPath(fs::path& p)
 {
-		//UINT64_MAX = 18,446,744,073,709,551,615 = 0xFFFFFFFFFFFFFFFF
-		try{
-			key = stoull(strKey);
+//change to show saved path and add or delete path
+	std::string path_str;
+	std::cout << "File Path: ";
 
-			//take key2
-			try{
-				key2 = stoull(strKey2);
-			}//there is no key2
-			catch(const invalid_argument& e){ 
-				key2 = key;
-			}//something else error
-			catch(const std::exception& e){
-				throw e;
-			}
+	std::cin >> path_str;
+	p = path_str;
 
-		}catch(const out_of_range& e)
-		{
-			key = 0;
-			key2 = 0;
-			throw std::overflow_error("[Runtime Error]: Key Value is too Big");
+	try{
+		//check existence, isFile, isDirectory
+		if(!fs::exists(p)){
+			throw std::runtime_error("File does not exists");
+		}else if(!fs::is_regular_file(p)){
+			throw std::runtime_error("File is not regular file");
+		}else if(fs::is_directory(p)){
+			throw std::runtime_error("Directory can't be En/Decrypted");
 		}
-		catch(const invalid_argument& e)
-		{
-			key = 0;
-			key2 = 0;
-			throw invalid_argument("[Invalid Input]: Key Value must be ULL Type");
-		}
+	}catch(std::exception& e){
+		std::cerr << "[ERROR] " << e.what() << std::endl << std::endl;
+		return false;
+	}
+	std::cout << "\n[SYSTEM] Success To Setting File Path\nSet Path: " << fs::canonical(p) << "\n";
+	//Normal return
+	return true;
 }
 
-
-//ENCRYPTION LOGIC
-inline void readValue(const char* path, std::string& str)
+void Menu(int& choice, menuOption option)
 {
-	//read from file
-	fstream file;
+	std::cout << std::endl;
+	if(option == menuOption::MAIN)
+	{
+		std::cout << "========== File En/Decryption Program ==========\n";
+		std::cout << "1. Encrypt File\n";
+		std::cout << "2. Decrypt File\n";
+		std::cout << "8. Settings\n";
+		std::cout << "9. Terminate Program\n";
+	}else if(option == menuOption::CRYPTO_LOGIC){
+		std::cout << "============= Select Crypto Logic ==============\n";
+		std::cout << "1. DES\n";
+		std::cout << "2. Triple DES\n";
+		std::cout << "3. AES\n";
+	}else if(option == menuOption::OP_MODE)
+	{
+		std::cout << "============ Select Operation Mode =============\n";
+		std::cout << "1. Electric CodeBook mode\n";
+		std::cout << "2. Cipher Block Chaining mode\n";
+		std::cout << "3. Cipher FeedBack mode\n";
+		std::cout << "4. Output FeedBack mode\n";
+		std::cout << "5. CounTeR mode\n";
 
-	//open file for binary -> reduce program running time
-	file.open(path, ios::in | ios::binary | ios::ate);		
-	if(file.fail())
-		throw std::invalid_argument("[Invalid Input]: Failed to Open File");
+	}else if(option == menuOption::SETTING)
+	{
+		std::cout << "=================== Settings ===================\n";
+		std::cout << "1. Show Now File Path\n";
+		std::cout << "2. Set New File Path\n";
+		std::cout << "3. Diagonsis Crypto Logic\n";
+		std::cout << "4. Program Information\n";
+		std::cout << "9. Back to Main Menu\n";
+	}
+
+	std::cout << "===============================================\n";
+	std::cout << "Choice: ";
 	
-	//take file msg
-	std::streamsize size = file.tellg();
-	file.seekg(0, ios::beg);
+	//if cin take invalid value, clear buffer and take value again
+	do{
+		std::cin >> choice;
+		if(!std::cin.fail()){
+			break;
+		}else{
+			std::cin.clear();
+		    	std::fseek(stdin, 0, SEEK_END);
+	}}while(true);
 
-	str.resize(size);
-
-	if(size > 0)
-		file.read(str.data(), size);
-
-	file.close();
-}
-
-inline void readValue(const char* path, std::vector<uint64_t>& vec)
-{
-	//read from file
-	fstream file;
-
-	//open for Input, for binary, At end
-	file.open(path, ios::in | ios::binary | ios::ate);
-	if(file.fail())
-		throw std::invalid_argument("[Invalid Input]: Failed to Open File");
-
-	//check file size
-	streamsize size = file.tellg();
-	
-	if(size % sizeof(uint64_t) != 0)
-		throw std::invalid_argument("[Invalid Input]: Invalid File (size no aligned)");
-
-	//return to begin
-	file.seekg(0, ios::beg);
-	
-	//for resize vector
-	size_t count = size / sizeof(uint64_t);
-	
-	vec.resize(count);
-
-	if(count <= 0)
-		throw length_error("[Length Error]: Failed to Read File");
-	
-	//take value once to whole vector
-	file.read(reinterpret_cast<char*>(vec.data()), size);
-	
-	file.close();
-}
-
-//ENCRYPTION LOGIC
-inline void writeValue(const char* path, const std::vector<uint64_t>& vec)
-{
-	//write to file
-	fstream file;
-	
-	//open file
-	file.open(path, ios::out | ios::trunc | ios::binary);
-	if(file.fail())
-		throw invalid_argument("[Invalid Input]: Failed to Open File");
-	
-	//write whole vector
-	file.write(reinterpret_cast<const char*>(vec.data()), vec.size() * sizeof(uint64_t));
-	file.close();
-}
-
-//DECRYPTION LOGIC
-inline void writeValue(const char* path, const std::string& str)
-{
-	//write to file
-	fstream file;
-
-	//open file
-	file.open(path, ios::out | ios::binary | ios::trunc);
-	if(file.fail())
-		throw invalid_argument("[Invalid Input]: Failed to Open File");
-	
-	//write string
-	file.write(str.data(), str.length());
-	file.close();
+	std::cout << std::endl;	
+	return;
 }

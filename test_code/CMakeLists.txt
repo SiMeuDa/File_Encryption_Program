@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(LOG "Enable logging features" OFF)
 
 # ============================================================
 # Main Program
@@ -32,6 +33,10 @@ add_executable(File_Encryption_Program
     # Interface
     src/interface/consolePrinter.cpp
 )
+
+if(LOG)
+	target_compile_definitions(File_Encryption_Program PRIVATE LOG)
+endif()
 
 target_include_directories(File_Encryption_Program
     PRIVATE

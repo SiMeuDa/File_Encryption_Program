@@ -24,7 +24,8 @@ public:
 	//Make Sub Key vector
 	DES() {}
 	DES(uint64_t key) : EnsubKey(16), DesubKey(16) { this->keySchedule(key); }
-	uint64_t cipher(uint64_t) override;
-	uint64_t decipher(uint64_t) override;
-	bool chkParity(uint64_t);
+	BLOCK cipher(const BLOCK& block) override;
+	BLOCK decipher(const BLOCK& block) override;
+	size_t get_block_size(void) override;
+	bool chkParity(BLOCK& msg) override;
 };

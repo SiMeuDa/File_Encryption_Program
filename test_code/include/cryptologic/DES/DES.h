@@ -7,6 +7,8 @@
 
 class DES : public feistel, public crypto {
 private:
+	constexpr size_t block_size = 8;
+
 	std::vector<uint64_t> EnsubKey;
 	std::vector<uint64_t> DesubKey;
 

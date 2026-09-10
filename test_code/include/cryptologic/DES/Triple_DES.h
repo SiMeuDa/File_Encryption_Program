@@ -5,9 +5,10 @@
 #include "cryptologic/DES/feistel.h"
 #include "cryptologic/crypto.h"
 
-class Triple_DES : private DES, public crypto {
+class Triple_DES : public crypto {
 private:
 	DES* des_ptr[2];
+	constexpr size_t block_size = 8;
 public:
 	//Make Sub Key vector
 	Triple_DES(uint64_t key1, uint64_t key2);

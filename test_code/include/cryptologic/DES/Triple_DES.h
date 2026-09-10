@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <string>
+#include <memory>
 #include "cryptologic/DES/feistel.h"
 #include "cryptologic/crypto.h"
 
 class Triple_DES : public crypto {
 private:
-	DES* des_ptr[2];
+	std::unique_ptr<DES> des_ptr[2];
 	constexpr size_t block_size = 8;
 public:
 	//Make Sub Key vector
@@ -17,5 +17,4 @@ public:
 	BLOCK decipher(const BLOCK& block) override;
 	bool chkParity(BLOCK& msg) override;
 	size_t get_block_size(void) override;
-	~Triple_DES() {}
 };

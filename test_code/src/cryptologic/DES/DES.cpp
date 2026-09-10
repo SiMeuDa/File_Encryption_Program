@@ -1,8 +1,20 @@
 #include "cryptologic/DES/DES.h"
+#include "cryptologic/crypto.h"
 #include <cstdint>
 #include <vector>
-#include <string>
-#include <bitset>
+
+DES::DES(uint64_t key)
+{
+	if(!chkParity(key))
+		throw std::invalid_argument("Invalid Key Value");
+
+	EnsubKey.resize(16);
+	DesubKey.resize(16);
+
+	this->keySchedule(key);
+}
+
+DES::~DES() { crypto::secure_zero(EnsubKey); crypto::secure_zero(DesubKey); }
 
 uint32_t DES::LCS(uint32_t value, size_t count)
 {
@@ -38,7 +50,7 @@ uint64_t DES::IP(uint64_t msg)
 	return result;
 }
 
-bool DES::keySchedule(uint64_t key)
+void DES::keySchedule(uint64_t key)
 {
 	//Standard Table
 	int pc1_Ctable[28] = {
@@ -102,8 +114,6 @@ bool DES::keySchedule(uint64_t key)
 
 		result = 0;
 	}
-
-	return true;
 }
 
 uint64_t DES::FP(uint64_t msg)
@@ -154,7 +164,7 @@ BLOCK DES::cipher(BLOCK org_msg)
 	msg = this->FP(msg);
 
 	//tanslate uint64_t to vector<uint8_t> type
-	for(size_t i = 0; i < sizeof(uint64_t); ++i)
+	for(size_t i = 0; i < sizeof(uint64_t) && i < block.size() ; ++i)
 		org_msg[i] = static_cast<uint8_t>(msg >> (8 * i)) & 0xFF;
 
 	return msg;
@@ -185,7 +195,7 @@ BLOCK DES::decipher(BLOCK msg)
 	msg = this->FP(msg);
 
 	//tanslate uint64_t to vector<uint8_t> type
-	for(size_t i = 0; i < sizeof(uint64_t); ++i)
+	for(size_t i = 0; i < block.size() && i < sizeof(uint64_t); ++i)
 		org_msg[i] = static_cast<uint8_t>(msg >> (8 * i)) & 0xFF;
 
 	return msg;

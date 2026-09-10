@@ -5,8 +5,10 @@
 #include <string>
 #include <string_view>
 
-class mode : public DES{
+class mode{
 protected:
+	crypto*
+
 	constexpr static int block_len = 8;
 	//Secure memset
 	void secure_wipe(void*, size_t);

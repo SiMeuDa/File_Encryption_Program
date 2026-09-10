@@ -1,0 +1,17 @@
+In file included from /home/ubuntu/workspace/File_Encryption_Program/test_code/main.cpp:2:
+/home/ubuntu/workspace/File_Encryption_Program/test_code/include/cryptologic/DES/DES.h:10:9: error: non-static data member ‘block_size’ declared ‘constexpr’
+   10 |         constexpr size_t block_size = 8;
+      |         ^~~~~~~~~
+/home/ubuntu/workspace/File_Encryption_Program/test_code/include/cryptologic/DES/DES.h:34:16: error: ‘size_t DES::get_block_size()’ marked ‘override’, but does not override
+   34 |         size_t get_block_size(void) override;
+      |                ^~~~~~~~~~~~~~
+/home/ubuntu/workspace/File_Encryption_Program/test_code/include/cryptologic/DES/DES.h:35:14: error: ‘bool DES::chkParity(const BLOCK&)’ marked ‘override’, but does not override
+   35 |         bool chkParity(const BLOCK& msg) override;
+      |              ^~~~~~~~~
+In file included from /home/ubuntu/workspace/File_Encryption_Program/test_code/main.cpp:3:
+/home/ubuntu/workspace/File_Encryption_Program/test_code/include/cryptologic/mode/mode.h:12:9: error: expected unqualified-id before ‘constexpr’
+   12 |         constexpr static int block_len = 8;
+      |         ^~~~~~~~~
+make[2]: *** [CMakeFiles/File_Encryption_Program.dir/build.make:76: CMakeFiles/File_Encryption_Program.dir/main.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:83: CMakeFiles/File_Encryption_Program.dir/all] Error 2
+make: *** [Makefile:91: all] Error 2

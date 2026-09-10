@@ -1,16 +1,17 @@
 #pragma once
+
 #include <cstdint>
 #include <vector>
-#include <string>
+//#include "block.h"
+using BLOCK = std::vector<uint8_t>
 
 class crypto {
-private:
-	enum cryptologic { DES, AES, HASH };
 public:
-	virtual ~crypto() {}
+	virtual ~crypto() = default;
 
-	virtual uint64_t cipher(uint64_t) = 0;
-	virtual uint64_t decipher(uint64_t) = 0;
-public:
-	void setParity(uint64_t&);
+	virtual BLOCK cipher(const BLOCK& block) = 0;
+	virtual BLOCK decipher(const BLOCK& block) = 0;
+	virtual size_t get_block_size(void) const = 0;
+	
+	virtual void setParity(BLOCK&) = 0;
 };

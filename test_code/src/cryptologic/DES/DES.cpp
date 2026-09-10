@@ -4,24 +4,6 @@
 #include <string>
 #include <bitset>
 
-bool DES::chkParity(uint64_t key)
-{
-	for (int i = 0; i < 8; i++)
-    {
-    	uint8_t group = (key >> (i * 8)) & 0xFF;
-		
-		group ^= group >> 4;
-		group ^= group >> 2;
-		group ^= group >> 1;
-
-		if((group & 1) == 0)
-        	return false;
-    }
-
-	return true;
-
-}
-
 uint32_t DES::LCS(uint32_t value, size_t count)
 {
 	for(size_t i = 0; i < count; i++)
@@ -147,8 +129,21 @@ uint64_t DES::FP(uint64_t msg)
 	return result;
 }
 
-uint64_t DES::cipher(uint64_t msg)
+BLOCK DES::cipher(BLOCK org_msg)
 {
+	//vector size check
+	if(org_msg.size() != block_size)
+	{
+		org_msg[0] = -1;
+		return org_msg;
+	}
+
+	uint64_t msg = 0;
+
+	//translate vector<uint8_t> to uint64_t type
+	for(size_t i = 0; i < org_msg.size() && i < sizeof(uint64_t); ++i)
+		msg |= static_cast<uint64_t>(org_msg[i]) << (8 * i);
+
 	//Initailze Permutation
 	msg = this->IP(msg);
 
@@ -158,11 +153,28 @@ uint64_t DES::cipher(uint64_t msg)
 	//Final Permutation
 	msg = this->FP(msg);
 
+	//tanslate uint64_t to vector<uint8_t> type
+	for(size_t i = 0; i < sizeof(uint64_t); ++i)
+		org_msg[i] = static_cast<uint8_t>(msg >> (8 * i)) & 0xFF;
+
 	return msg;
 }
 
-uint64_t DES::decipher(uint64_t msg)
+BLOCK DES::decipher(BLOCK msg)
 {
+	//vector size check
+	if(org_msg.size() != block_size)
+	{
+		org_msg[0] = -1;
+		return org_msg;
+	}
+
+	uint64_t msg = 0;
+
+	//translate vector<uint8_t> to uint64_t type
+	for(size_t i = 0; i < org_msg.size() && i < sizeof(uint64_t); ++i)
+		msg |= static_cast<uint64_t>(org_msg[i]) << (8 * i);
+
 	//Initailze Permutation
 	msg = this->IP(msg);
 
@@ -172,5 +184,29 @@ uint64_t DES::decipher(uint64_t msg)
 	//Final Permutation
 	msg = this->FP(msg);
 
+	//tanslate uint64_t to vector<uint8_t> type
+	for(size_t i = 0; i < sizeof(uint64_t); ++i)
+		org_msg[i] = static_cast<uint8_t>(msg >> (8 * i)) & 0xFF;
+
 	return msg;
 }
+
+size_t DES::get_block_size(void) { return block_size; }
+
+bool DES::chkParity(const BLOCK& key)
+{
+	for(size_t i = 0; i < key.size(); i++)
+	{
+		uint8_t group = key[i];
+
+		group ^= group >> 4;
+		group ^= group >> 2;
+		group ^= group >> 1;
+		
+		if((group & 1) == 0)
+        		return false;
+	}
+
+	return true;
+}
+

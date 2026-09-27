@@ -1,6 +1,6 @@
 ## 🛡️ File_Encryption_Program
 
-![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)
+![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 
 
 **File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)를 직접 구현하였으며, 멀티스레딩를 적용했습니다.
@@ -30,19 +30,20 @@
 ├── include/
 │   ├── cryptologic/
 │   │   ├── DES/		           
-│   │   │   ├── festiel.cpp        # DES feistel 구조
-│   │   │   └── DES.cpp            # DES 서브 구조 (IP, key scheduling, FP, etc...)
+│   │   │   ├── festiel.cpp         # DES feistel 구조
+│   │   │   ├── DES.cpp             # DES 서브 구조 (IP, key scheduling, FP, etc...)
+│   │   │   └── Triple_DES.cpp      # Triple_DES 서브 구조 (기존 DES 사용)
 │   │   ├── mode/	           
-│   │   │   ├── mode.cpp           # 블럭 암호 운용 모드 기본구조
-│   │   │   ├── ECB.cpp            # Electric CodeBook mode
-│   │   │   ├── CBC.cpp            # Chain Block Chaining mode
-│   │   │   ├── CFB.cpp            # Cipher FeedBack mode
-│   │   │   ├── OFB.cpp            # Output FeedBack mode
-│   │   │   └── CTR.cpp            # CounTeR mode
-│   │   └──  crypto.cpp            # 암호화 가상함수, 패리티 비트 set
+│   │   │   ├── mode.cpp            # 블럭 암호 운용 모드 Base
+│   │   │   ├── ECB.cpp             # Electric CodeBook mode
+│   │   │   ├── CBC.cpp             # Chain Block Chaining mode
+│   │   │   ├── CFB.cpp             # Cipher FeedBack mode
+│   │   │   ├── OFB.cpp             # Output FeedBack mode
+│   │   │   └── CTR.cpp             # CounTeR mode
+│   │   └──  crypto.h               # 암호화 Base
 │   └── interface/
-│       ├── consolePrinter.cpp     # 로딩 CLI 메인함수
-│       └──  iprogress.h           # 로딩 CLI 가상함수
+│       ├── menu.cpp                # 메뉴 출력 & 색 지정
+│       └──  thread_queue.h         # 멀티스레딩용 queue
 ├── test_case_generator/
 │       └── test.cpp               # KB 단위 테스트 텍스트 파일 생성
 └── README.md
@@ -52,8 +53,12 @@
 **빌드 방법**
 
     [Main Program]
-    
-    g++ main.cpp include/cryptologic/crypto.cpp include/cryptologic/DES/*.cpp include/cryptologic/mode/*.cpp include/interface/consolePrinter.cpp include/interface/iprogress.h
+
+    cmake 실행
+    cmake -S . -B build
+
+    make 실행
+    make -C build
     
     [Test Program]
     
@@ -62,7 +67,7 @@
 **실행 예시**
 
 1. 파일 암호화 (DES-OFB 모드)
-./[file_name] -en [1/0] -f [file_path] -k [key] ([key2])
+./[file_name]
 
 2. 테스트 파일 생성 (KB 단위)
 ./[file_name] [file_size]

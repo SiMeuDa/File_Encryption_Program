@@ -28,6 +28,7 @@ google_source.txt
 random*.bin
 callgrind.out.*
 temp/
+test/
 
 # --- 시스템 파일 ---
 .DS_Store

@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include "../../interface/iprogress.h"
 #include <vector>
 
 class feistel{
@@ -13,11 +12,8 @@ protected:
 	feistel() {};
 	~feistel(){};
 
-	IProgress* m_callback = nullptr;
 
 	uint64_t round(uint64_t, std::vector<uint64_t>&);
 
-public:
-	void setProgressCallback(IProgress* callback) { m_callback = callback; }
 };
 

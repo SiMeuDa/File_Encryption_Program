@@ -1,6 +1,5 @@
-#include "feistel.h"
+#include "cryptologic/DES/feistel.h"
 #include <cstdint>
-#include "../../interface/iprogress.h"
 #include <vector>
 
 //diffusion confusion

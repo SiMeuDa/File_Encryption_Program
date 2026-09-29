@@ -29,6 +29,12 @@ public:
 	       	   *p++ = 0;
 	}
 
+	template <typename T>
+	static BLOCK to_block(T value)
+	{
+		BLOCK result;
+	}
+
 	enum class crypto_logic {
 		DES 		= 0,
 		Triple_DES 	= 1,

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MENU_H
+#define MENU_H
 #include <string_view>
 
 class menu{
@@ -31,3 +32,4 @@ public:
 
 	void MESSAGE(const char* = "A", int = 0);
 };
+#endif

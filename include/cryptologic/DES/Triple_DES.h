@@ -1,9 +1,11 @@
-#pragma once
+#ifndef TRIPLE_DES_H
+#define TRIPLE_DES_H
 #include <cstdint>
 #include <vector>
 #include <memory>
 #include "cryptologic/DES/feistel.h"
 #include "cryptologic/crypto.h"
+#include "cryptologic/block.h"
 
 class Triple_DES : public crypto {
 private:
@@ -19,3 +21,4 @@ public:
 	bool setParity(BLOCK&) override;
 	size_t get_block_size(void) override;
 };
+#endif

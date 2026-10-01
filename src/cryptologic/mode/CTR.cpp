@@ -14,7 +14,7 @@
 
 BLOCK CTR::encrypt_mode(const BLOCK& msg)
 {
-	BLOCK result = msg, counter_result;	
+	BLOCK result = msg, counter_result, init_counter;	
 	
 	if(result.empty() || block_len == 0)
 		return result;
@@ -25,10 +25,12 @@ BLOCK CTR::encrypt_mode(const BLOCK& msg)
 
 		for(auto it = counter.end() - (block_len / 2); it != counter.end(); ++it)
 			*it = std::byte{0x00};
+		init_counter = counter;
 	}
-	size_t size = result.size(), block_count = (size + block_len - 1) / block_len;
 
-	for(size_t i = 0; i < size; i += 8)
+	size_t size = result.size();
+
+	for(size_t i = 0; i < size; i += block_len)
 	{
 		//do cipher
 		counter_result = crypto_ptr->cipher(counter);
@@ -39,15 +41,12 @@ BLOCK CTR::encrypt_mode(const BLOCK& msg)
 		for(size_t j = 0; j < real_size; j++)
 			result[i + j] ^= counter_result[j];
 		//increase counter
-		counter = DES::to_block(DES::to_uint64(counter) + 1);
-
+		counter = block::increment(counter);
 	}
 
 	if(isFirst)
 	{
-		counter	= DES::to_block(DES::to_uint64(counter) - block_count);
-
-		result.insert(result.begin(), counter.begin(), counter.end());
+		result.insert(result.begin(), init_counter.begin(), init_counter.end());
 		
 		isFirst = false;
 	}
@@ -89,7 +88,7 @@ BLOCK CTR::decrypt_mode(const BLOCK& msg)
 #ifdef LOG
 	std::clog << "[SYSTEM]: Start to loop" << std::endl;
 #endif
-	for(size_t i = 0; i < size; i += 8)
+	for(size_t i = 0; i < size; i += block_len)
 	{
 		//do cipher
 		counter_result = crypto_ptr->cipher(counter);
@@ -100,7 +99,7 @@ BLOCK CTR::decrypt_mode(const BLOCK& msg)
 			result[i + j] ^= counter_result[j];
 
 		//increase counter
-		counter = DES::to_block(DES::to_uint64(counter) + 1);
+		counter = block::increment(counter);
 	}
 #ifdef LOG
 	std::clog << "[SYSTEM]: Success to loop" << std::endl;

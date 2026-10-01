@@ -1,10 +1,9 @@
-#pragma once
+#ifndef CRYPTO_H
+#define CRYPTO_H
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <array>
-//#include "block.h"
-using BLOCK = std::vector<std::byte>;
+#include "block.h"
 
 class crypto {
 public:
@@ -37,3 +36,4 @@ public:
 
 
 };
+#endif

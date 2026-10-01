@@ -9,9 +9,9 @@
 
 * **Symmetric-Key Cryptography**: 
     * **DES & 3DES** 알고리즘 구현.
-    * **OFB (Output Feedback)** 모드 등을 지원하여 블록 암호의 안전한 운용 가능.
+    * **운영 모드 (Operation Mode)** 모드 등을 지원하여 블록 암호의 안전한 운용 가능.
 * **Performance Optimization**: 
-    * `std::thread`를 활용한 병렬 처리를 통해 대용량 파일 암호화 시 CPU 자원을 효율적으로 사용합니다.
+    * `std::thread`를 활용한 병렬 처리를 통해 대용량 파일 암호화 시 CPU 자원을 효율적으로 사용합니다. (not yet)
 * **System-Level Programming**: 
     * 비트 단위 연산(Bitwise Operations)과 메모리 관리를 최적화하여 암호화 성능을 극대화했습니다.
     * 파일 입출력 스트림을 활용한 안정적인 데이터 핸들링을 구현했습니다.
@@ -66,8 +66,8 @@
 
 **실행 예시**
 
-1. 파일 암호화 (DES-OFB 모드)
-./[file_name]
+1. 파일 암호화 
+./build/File_Encryption_Program
 
 2. 테스트 파일 생성 (KB 단위)
 ./[file_name] [file_size]

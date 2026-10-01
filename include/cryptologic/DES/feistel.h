@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FEISTEL_H
+#define FEISTEL_H
 #include <cstdint>
 #include <vector>
 
@@ -16,4 +17,4 @@ protected:
 	uint64_t round(uint64_t, std::vector<uint64_t>&);
 
 };
-
+#endif

@@ -28,9 +28,9 @@ BLOCK CTR::encrypt_mode(const BLOCK& msg)
 		init_counter = counter;
 	}
 
-	size_t size = result.size(), block_count = (size + block_len - 1) / block_len;
+	size_t size = result.size();
 
-	for(size_t i = 0; i < size; i += 8)
+	for(size_t i = 0; i < size; i += block_len)
 	{
 		//do cipher
 		counter_result = crypto_ptr->cipher(counter);
@@ -88,7 +88,7 @@ BLOCK CTR::decrypt_mode(const BLOCK& msg)
 #ifdef LOG
 	std::clog << "[SYSTEM]: Start to loop" << std::endl;
 #endif
-	for(size_t i = 0; i < size; i += 8)
+	for(size_t i = 0; i < size; i += block_len)
 	{
 		//do cipher
 		counter_result = crypto_ptr->cipher(counter);
@@ -104,6 +104,5 @@ BLOCK CTR::decrypt_mode(const BLOCK& msg)
 #ifdef LOG
 	std::clog << "[SYSTEM]: Success to loop" << std::endl;
 #endif
-	counter = block::decrement(counter);
 	return result;
 }

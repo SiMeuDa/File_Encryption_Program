@@ -1,21 +1,26 @@
 #include <cstddef>
 #include <vector>
-using BLOCK = std::vector<std:::byte>;
+using BLOCK = std::vector<std::byte>;
 
 class block{
 public:
 	template <typename T>
 	static BLOCK to_block(T value)
 	{
-		BLOCK result;
+		//temp not end
+		size_t type_size = sizeof(T);
+		BLOCK result(type_size, std::byte{0x00});
+
+		return result;
 	}
 
 	template <typename T>
 	static BLOCK to_integer(const BLOCK& value)
 	{
+		//temp not end
 	}
 	
-	friend BLOCK operator++(BLOCK& BLO_value, int int_value)
+	static BLOCK increment(BLOCK& BLO_value, int dump)
 	{
 		BLOCK data = BLO_value;
 		if(data.empty())
@@ -28,7 +33,7 @@ public:
 		{
 			for(size_t j = 0; j < type_size; j++)
 			{
-				if(data[block_size - 1 - i] & (std::byte{0x01} << j)
+				if((data[block_size - 1 - i] & (std::byte{0x01} << j))
 				!= std::byte{0x00})
 				{
 					data[block_size - 1 - i] ^= (std::byte{0x01} << j);
@@ -41,7 +46,7 @@ public:
 		return data;
 	}
 
-	friend BLOCK& operator++(BLOCK& BLO_value)
+	static BLOCK& increment(BLOCK& BLO_value)
 	{
 		if(BLO_value.empty())
 			return BLO_value;
@@ -53,7 +58,7 @@ public:
 		{
 			for(size_t j = 0; j < type_size; j++)
 			{
-				if(BLO_value[block_size - 1 - i] & (std::byte{0x01} << j)
+				if((BLO_value[block_size - 1 - i] & (std::byte{0x01} << j))
 				!= std::byte{0x00})
 				{
 					BLO_value[block_size - 1 - i] ^= (std::byte{0x01} << j);
@@ -65,4 +70,4 @@ public:
 
 		return BLO_value;
 	}
-}	
+};

@@ -14,6 +14,7 @@ private:
 public:
 	//Make Sub Key vector
 	Triple_DES(BLOCK key1, BLOCK key2);
+	~Triple_DES();
 
 	BLOCK cipher(BLOCK) override;
 	BLOCK decipher(BLOCK) override;

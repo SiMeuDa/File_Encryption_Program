@@ -22,7 +22,7 @@ Triple_DES::Triple_DES(BLOCK key, BLOCK key2)
 	}
 }
 
-~Triple_DES::Triple_DES()
+Triple_DES::~Triple_DES()
 {
 	delete des_ptr[1];
 	delete des_ptr[0];

@@ -108,7 +108,7 @@ void DES::keySchedule(BLOCK key)
 	uint64_t result = 0, temp = 0;
 	uint32_t C = 0, D = 0;
 
-	temp = to_uint64(key);
+	temp = block::to_integer<uint64_t>(key);
 
 	//PC - 1
 	for(int i = 0; i < 28; i++)
@@ -182,7 +182,7 @@ BLOCK DES::cipher(BLOCK org_msg)
 	org_msg = this->IP(org_msg);
 
 	//feistel structure
-	org_msg = to_block(round(to_uint64(org_msg), EnsubKey));
+	org_msg = block::to_block(round(block::to_integer<uint64_t>(org_msg), EnsubKey));
 
 	//Final Permutation
 	org_msg = this->FP(org_msg);
@@ -202,7 +202,7 @@ BLOCK DES::decipher(BLOCK org_msg)
 	org_msg = this->IP(org_msg);
 
 	//feistel structure
-	org_msg = to_block(round(to_uint64(org_msg), DesubKey));
+	org_msg = block::to_block(round(block::to_integer<uint64_t>(org_msg), DesubKey));
 
 	//Final Permutation
 	org_msg = this->FP(org_msg);
@@ -245,24 +245,3 @@ bool DES::setParity(BLOCK& key)
 
         return true;
 }
-
-uint64_t DES::to_uint64(BLOCK value)
-{
-	uint64_t result = 0;
-
-	for(size_t i = 0; i < value.size(); i++)
-		result = std::to_integer<uint64_t>(value[i]) << 8 * (7 - i);
-
-	return result;
-}
-
-BLOCK DES::to_block(uint64_t value)
-{
-	BLOCK result(8);
-
-	for(size_t i = 0; i < sizeof(uint64_t) && i < result.size() ; ++i)
-                result[i] = static_cast<std::byte>((value >> (8 * i)) & 0xFF);
-
-	return result;
-}
-

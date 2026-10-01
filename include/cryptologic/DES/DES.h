@@ -1,9 +1,11 @@
-#pragma once
+#ifndef DES_H
+#define DES_H
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
 #include "cryptologic/DES/feistel.h"
 #include "cryptologic/crypto.h"
+#include "cryptologic/block.h"
 
 class DES : public feistel, public crypto {
 private:
@@ -32,7 +34,6 @@ public:
 	BLOCK decipher(BLOCK block) override;
 
 	bool setParity(BLOCK&) override;
-	static uint64_t to_uint64(BLOCK);
-	static BLOCK to_block(uint64_t);
 	size_t get_block_size(void) override;
 };
+#endif

@@ -1,10 +1,9 @@
-#pragma once
+#ifndef CRYPTO_H
+#define CRYPTO_H
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <array>
-//#include "block.h"
-using BLOCK = std::vector<std::byte>;
+#include "block.h"
 
 class crypto {
 public:
@@ -29,12 +28,6 @@ public:
 	       	   *p++ = 0;
 	}
 
-	template <typename T>
-	static BLOCK to_block(T value)
-	{
-		BLOCK result;
-	}
-
 	enum class crypto_logic {
 		DES 		= 0,
 		Triple_DES 	= 1,
@@ -43,3 +36,4 @@ public:
 
 
 };
+#endif

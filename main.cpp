@@ -1,5 +1,6 @@
 //Base Header
 #include "cryptologic/crypto.h" 
+#include "cryptologic/block.h"
 //Crypto Logic
 #include "cryptologic/DES/DES.h"
 //#include "cryptologic/DES/Triple_DES.h"
@@ -88,12 +89,12 @@ int main(void)
 			std::cout << "Key Input: ";
 			std::cin >> int_key;
 
-			key = DES::to_block(int_key);
+			key = block::to_block(int_key);
 
 			if(cLog == crypto::crypto_logic::Triple_DES){
 				std::cout << "Key 2 Input: ";
 				std::cin >> int_key2;
-				BLOCK key_app = DES::to_block(int_key2);
+				BLOCK key_app = block::to_block(int_key2);
 				
 				key.insert(key.end(), key_app.begin(), key_app.end());
 			}

@@ -1,5 +1,7 @@
-#pragma once
+#ifndef MODE_H
+#define MODE_H
 #include "cryptologic/crypto.h"
+#include "cryptologic/block.h"
 #include "cryptologic/DES/DES.h"
 #include "cryptologic/DES/Triple_DES.h"
 #include <vector>
@@ -41,3 +43,4 @@ public:
 	//CounTeR
 */
 };
+#endif

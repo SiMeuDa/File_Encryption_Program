@@ -2,18 +2,18 @@
 #define CRYPTO_H
 #include <memory>
 #include <cstdint>
-using uint8_t* = block;
+using block = uint8_t*;
 
 class crypto {
 public:
 	virtual ~crypto() = default;
 
-	virtual void cipher(const block input, block output) const = 0;
-	virtual void decipher(const block input, block output) const = 0;
+	virtual void cipher(const block, block) const = 0;
+	virtual void decipher(const block, block) const = 0;
 	virtual size_t get_block_size(void) const noexcept = 0;
 	//check key's parity bits
 	virtual bool chkParity(const block) = 0;
-	virtual bool setParity(block) = 0;
+	virtual void setParity(block) = 0;
 	template <typename Container>
 	void secure_erase(Container& c)
 	{

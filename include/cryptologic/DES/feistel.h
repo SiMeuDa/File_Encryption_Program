@@ -14,7 +14,7 @@ protected:
 	~feistel(){};
 
 
-	uint64_t round(uint64_t, std::vector<uint64_t>&);
+	uint64_t round(uint64_t, std::array<uint64_t, 16>&);
 
 };
 #endif

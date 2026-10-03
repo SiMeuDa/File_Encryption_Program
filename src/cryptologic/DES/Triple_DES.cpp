@@ -1,13 +1,12 @@
 #include "cryptologic/DES/Triple_DES.h"
 #include "cryptologic/DES/DES.h"
-#include <exception>
 #include <cstdint>
-#include <vector>
 
-Triple_DES::Triple_DES(BLOCK key, BLOCK key2)
+Triple_DES::Triple_DES(const block key, const block key2)
 {
-	if(key2.empty())
-		key2 = key;
+	if(key == nullptr ||
+	key2 == nullptr)
+		throw std::bad_alloc();
 
 	des_ptr[0] = new DES(key);
 	if(des_ptr[0] == nullptr)
@@ -46,38 +45,36 @@ BLOCK Triple_DES::decipher(BLOCK msg)
 	return msg;
 }
 
-bool Triple_DES::chkParity(const BLOCK& key)
+bool Triple_DES::chkParity(const block key)
 {
-	for(size_t i = 0; i < key.size(); i++)
+	for(size_t i = 0; i < 8; i++)
 	{
-		std::byte group = key[i];
+		uint8_t group = key[i];
 
 		group ^= group >> 4;
 		group ^= group >> 2;
 		group ^= group >> 1;
 
-		if((group & std::byte{0x01}) == std::byte{0x00})
+		if((group & 0x01) == 0x00)
         		return false;
 	}
 
 	return true;
 }
 
-bool Triple_DES::setParity(BLOCK& key)
+void Triple_DES::setParity(block key)
 {
-	for(size_t i = 0; i < key.size(); i++)
+	for(size_t i = 0; i < 8; i++)
         {
-                std::byte group = key[i];
+                uint8_t group = key[i];
 
                 group ^= group >> 4;
                 group ^= group >> 2;
                 group ^= group >> 1;
 
-                if((group & std::byte{0x01}) == std::byte{0x00})
-                                key[i] ^= std::byte{0x01};
+                if((group & 0x01) == 0x00)
+                                key[i] ^= 0x01;
         }
-
-        return true;
 }
 
 size_t Triple_DES::get_block_size(void) { return block_size; }

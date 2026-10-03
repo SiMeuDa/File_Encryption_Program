@@ -1,22 +1,34 @@
 #include "cryptologic/DES/DES.h"
 #include "cryptologic/crypto.h"
 #include <cstdint>
-#include <vector>
-#include <algorithm>
+#include <stdexcept>
 
-DES::DES(BLOCK key)
+DES::DES(block key)
 {
 	setParity(key);
+
 	if(!chkParity(key))
 		throw std::invalid_argument("Invalid Key Value");
-
-	EnsubKey.resize(16);
-	DesubKey.resize(16);
 
 	this->keySchedule(key);
 }
 
 DES::~DES() { crypto::secure_erase(EnsubKey); crypto::secure_erase(DesubKey); }
+
+uint64_t load64(block input)
+{
+	uint64_t result = 0;
+	for(int i = 0; i < 8; i++)
+		result |= static_cast<uint64_t>(input[7 - i]) << (8 * i);
+
+	return result;
+}
+
+void store64(uint64_t input, block output)
+{
+	for(int i = 0; i < 8; i++)
+		output[i] = (input >> (8 * i)) & 0xFF;
+}
 
 uint32_t DES::LCS28(uint32_t value, size_t count)
 {
@@ -40,7 +52,7 @@ uint32_t DES::LCS28(uint32_t value, size_t count)
 }
 
 
-BLOCK DES::IP(BLOCK msg)
+uint64_t DES::IP(uint64_t msg)
 {
         //Standard IP Table
         int table[64] = {
@@ -54,24 +66,15 @@ BLOCK DES::IP(BLOCK msg)
                 63, 55, 47, 39, 31, 23, 15, 7
                 };
         
-	BLOCK result(block_size, std::byte{0x00});
-        std::byte change_block;
+	uint64_t result = 0;
         
-	for(size_t i = 0; i < block_size; i++){
-                for(size_t j = 0; j < 8; j++){
-                        size_t index = i * block_size + j;
-                        int bit_pos = table[index] - 1;
+	for(int i = 0; i < 64; i++)
+		result |= (msg & (1ULL << (table[i] - 1))) >> (63 - i);
 
-                        change_block = msg[bit_pos / 8];
-
-                        change_block = change_block >> (7 - (bit_pos % 8)) & std::byte{0x01};
-
-                        result[i] |= change_block << (7 - j);
-        }}
         return result;
 }
 
-void DES::keySchedule(BLOCK key)
+void DES::keySchedule(block key)
 {
 	//Standard Table
 	int pc1_Ctable[28] = {
@@ -108,7 +111,7 @@ void DES::keySchedule(BLOCK key)
 	uint64_t result = 0, temp = 0;
 	uint32_t C = 0, D = 0;
 
-	temp = block::to_integer<uint64_t>(key);
+	temp = DES::load64(key);
 
 	//PC - 1
 	for(int i = 0; i < 28; i++)
@@ -136,9 +139,10 @@ void DES::keySchedule(BLOCK key)
 
 		result = 0;
 	}
+
 }
 
-BLOCK DES::FP(BLOCK msg)
+uint64_t DES::FP(uint64_t msg)
 {
 	//Stanard FP Table (inverse metrix of IP table)
 	int table[64] = {
@@ -152,96 +156,78 @@ BLOCK DES::FP(BLOCK msg)
 		33, 1, 41,  9, 49, 17, 57, 25
 		};
 	
-	BLOCK result(block_size, std::byte{0x00});
-        std::byte change_block;
+	uint64_t result = 0;
         
-	for(size_t i = 0; i < block_size; i++){
-                for(size_t j = 0; j < 8; j++){
-                        size_t index = i * block_size + j;
-                        int bit_pos = table[index] - 1;
-
-                        change_block = msg[bit_pos / 8];
-
-                        change_block = change_block >> (7 - (bit_pos % 8)) & std::byte{0x01};
-
-                        result[i] |= change_block << (7 - j);
-        }}
+	for(int i = 0; i < 64; i++)
+		result |= (msg & (1ULL << (table[i] - 1))) >> (63 - i);
         
 	return result;				
 }
 
-BLOCK DES::cipher(BLOCK org_msg)
+void DES::cipher(const block input, block output)
 {
-	//vector size check
-	if(org_msg.size() != block_size)
-	{
-		throw std::length_error("Invalid Block Size");
-	}
+	uint64_t input64 = load64(input);
 
 	//Initailze Permutation
-	org_msg = this->IP(org_msg);
+	input64 = this->IP(input64);
 
 	//feistel structure
-	org_msg = block::to_block(round(block::to_integer<uint64_t>(org_msg), EnsubKey));
+	input64 = feistel::round(input64, EnsubKey);
 
 	//Final Permutation
-	org_msg = this->FP(org_msg);
+	input64 = this->FP(input64);
 
-	return org_msg;
+	//store output for uint8+t array
+	store64(input64, output);
 }
 
-BLOCK DES::decipher(BLOCK org_msg)
+void DES::decipher(const block input, block output)
 {
-	//vector size check
-	if(org_msg.size() != block_size)
-	{
-		throw std::length_error("Invalid Block Size");
-	}
+	uint64_t input64 = load(input);
 
 	//Initailze Permutation
-	org_msg = this->IP(org_msg);
+	input64 = this->IP(input64);
 
 	//feistel structure
-	org_msg = block::to_block(round(block::to_integer<uint64_t>(org_msg), DesubKey));
+	input64 = feistel::round(input64, DesubKey);
 
 	//Final Permutation
-	org_msg = this->FP(org_msg);
+	input64 = this->FP(input64);
 
-	return org_msg;
+	store64(input64, output);
 }
 
 size_t DES::get_block_size(void) { return block_size; }
 
-bool DES::chkParity(const BLOCK& key)
+bool DES::chkParity(const block key)
 {
-	for(size_t i = 0; i < key.size(); i++)
+	for(size_t i = 0; i < 8; i++)
 	{
-		std::byte group = key[i];
+		uint8_t group = key[i];
 
 		group ^= group >> 4;
 		group ^= group >> 2;
 		group ^= group >> 1;
 		
-		if((group & std::byte{0x01}) == std::byte{0x00})
+		if((group & 0x01) == 0x00)
         		return false;
 	}
 
 	return true;
 }
 
-bool DES::setParity(BLOCK& key)
+void DES::setParity(block key)
 {
-	for(size_t i = 0; i < key.size(); i++)
+	for(size_t i = 0; i < 8; i++)
         {
-                std::byte group = key[i];
+                uint8_t group = key[i];
 
                 group ^= group >> 4;
                 group ^= group >> 2;
                 group ^= group >> 1;
 
-                if((group & std::byte{0x01}) == std::byte{0x00})
-                        	key[i] ^= std::byte{0x01};
+                if((group & 0x01) == 0x00)
+                        key[i] ^= 0x01;
         }
 
-        return true;
 }

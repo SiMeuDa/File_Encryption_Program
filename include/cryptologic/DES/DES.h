@@ -33,7 +33,7 @@ private:
 public:
 	//Make Sub Key vector
 	DES() {}
-	DES(uint64_t key);
+	DES(block key);
 	~DES();
 	void cipher(const block, block) const override;
 	void decipher(const block, block) const override;

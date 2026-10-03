@@ -19,7 +19,7 @@ uint64_t DES::load64(block input)
 {
 	uint64_t result = 0;
 	for(int i = 0; i < 8; i++)
-		result |= static_cast<uint64_t>(input[7 - i]) << (8 * i);
+		result |= static_cast<uint64_t>(input[i]) << (8 * i);
 
 	return result;
 }
@@ -69,7 +69,7 @@ uint64_t DES::IP(uint64_t msg)
 	uint64_t result = 0;
         
 	for(int i = 0; i < 64; i++)
-		result |= (((msg >> (64 - table[i])) & 1ULL) >> (63 - i);
+		result |= ((msg >> (64 - table[i])) & 1ULL) << (63 - i);
 
         return result;
 }
@@ -197,7 +197,7 @@ void DES::decipher(const block input, block output)
 	store64(input64, output);
 }
 
-size_t DES::get_block_size(void) { return block_size; }
+size_t DES::get_block_size(void) const noexcept { return block_size; }
 
 bool DES::chkParity(const block key)
 {

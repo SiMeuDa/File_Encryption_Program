@@ -126,8 +126,8 @@ void DES::keySchedule(block key)
 		C = LCS28(C, round_table[i]);
 		D = LCS28(D, round_table[i]);
 	
-		temp = static_cast<uint64_t>(C);
-		temp |= static_cast<uint64_t>(D) << 28;	
+		temp = static_cast<uint64_t>(D);
+		temp |= static_cast<uint64_t>(C) << 28;	
 
 		//PC - 2
 		for(int j = 0; j < 48; j++)
@@ -183,7 +183,7 @@ void DES::cipher(const block input, block output)
 
 void DES::decipher(const block input, block output)
 {
-	uint64_t input64 = load(input);
+	uint64_t input64 = load64(input);
 
 	//Initailze Permutation
 	input64 = this->IP(input64);

@@ -15,7 +15,7 @@ DES::DES(block key)
 
 DES::~DES() { crypto::secure_erase(EnsubKey); crypto::secure_erase(DesubKey); }
 
-uint64_t load64(block input)
+uint64_t DES::load64(block input)
 {
 	uint64_t result = 0;
 	for(int i = 0; i < 8; i++)
@@ -24,7 +24,7 @@ uint64_t load64(block input)
 	return result;
 }
 
-void store64(uint64_t input, block output)
+void DES::store64(uint64_t input, block output)
 {
 	for(int i = 0; i < 8; i++)
 		output[i] = (input >> (8 * i)) & 0xFF;
@@ -69,7 +69,7 @@ uint64_t DES::IP(uint64_t msg)
 	uint64_t result = 0;
         
 	for(int i = 0; i < 64; i++)
-		result |= (msg & (1ULL << (table[i] - 1))) >> (63 - i);
+		result |= (((msg >> (64 - table[i])) & 1ULL) >> (63 - i);
 
         return result;
 }
@@ -159,7 +159,7 @@ uint64_t DES::FP(uint64_t msg)
 	uint64_t result = 0;
         
 	for(int i = 0; i < 64; i++)
-		result |= (msg & (1ULL << (table[i] - 1))) >> (63 - i);
+		result |= ((msg >> (64 - table[i])) & 1ULL) << (63 - i);
         
 	return result;				
 }

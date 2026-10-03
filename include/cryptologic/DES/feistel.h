@@ -1,7 +1,7 @@
 #ifndef FEISTEL_H
 #define FEISTEL_H
 #include <cstdint>
-#include <vector>
+#include <array>
 
 class feistel{
 private:

@@ -11,7 +11,7 @@ private:
 	BLOCK init_counter;
 public:
 	CTR(crypto::crypto_logic cl, BLOCK key) : mode(cl, key), isFirst(true) {}
-	BLOCK encrypt_mode(const BLOCK&) override;
-	BLOCK decrypt_mode(const BLOCK&) override;
+	BLOCK encrypt_mode(const BLOCK&, bool) override;
+	BLOCK decrypt_mode(const BLOCK&, bool) override;
 };
 #endif

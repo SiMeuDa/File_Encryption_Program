@@ -33,8 +33,8 @@ public:
 	mode(crypto::crypto_logic cl, BLOCK key);
 	virtual ~mode() {}
 
-	virtual BLOCK encrypt_mode(const BLOCK&) = 0;
-	virtual BLOCK decrypt_mode(const BLOCK&) = 0;
+	virtual BLOCK encrypt_mode(const BLOCK&, bool eof) = 0;
+	virtual BLOCK decrypt_mode(const BLOCK&, bool eof) = 0;
 /*
 	//Electric CodeBook mode
 	//Cipher Block Chaining mode

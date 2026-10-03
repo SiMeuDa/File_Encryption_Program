@@ -1,17 +1,15 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
-#include <cstddef>
+#include <memory>
 #include <cstdint>
-#include <vector>
-#include "block.h"
 
 class crypto {
 public:
 	virtual ~crypto() = default;
 
-	virtual BLOCK cipher(BLOCK block) = 0;
-	virtual BLOCK decipher(BLOCK block) = 0;
-	virtual size_t get_block_size(void) = 0;
+	virtual void cipher(const uint8_t* input, unt8_t* output) const = 0;
+	virtual void decipher(const uint8_t* input, uint8_t* output) const = 0;
+	virtual size_t get_block_size(void) const noexcept = 0;
 	//check key's parity bits
 	virtual bool chkParity(const BLOCK&) = 0;
 	virtual bool setParity(BLOCK&) = 0;

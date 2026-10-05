@@ -1,10 +1,14 @@
 #ifndef MENU_H
 #define MENU_H
+#include <string>
 #include <string_view>
+#include <cstdint>
+#include "cryptologic/crypto.h"
 
 class menu{
 private:
 	void safe_input(int&);
+	void take_hex(block);
 public:
 	struct ANSI
 	{
@@ -25,6 +29,7 @@ public:
 	};
 
 	void main(int&);
+	void take_key(crypto::crypto_logic, block&);
 	void crypto_logic(int&);
 	void op_mode(int&);
 	void setting(int&);

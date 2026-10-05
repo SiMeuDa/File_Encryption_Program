@@ -166,6 +166,9 @@ uint64_t DES::FP(uint64_t msg)
 
 void DES::cipher(const block input, block output)
 {
+	if(input == nullptr ||
+	output == nullptr)
+		return;
 	uint64_t input64 = load64(input);
 
 	//Initailze Permutation
@@ -183,6 +186,9 @@ void DES::cipher(const block input, block output)
 
 void DES::decipher(const block input, block output)
 {
+	if(input == nullptr ||
+	output == nullptr)
+		return;
 	uint64_t input64 = load64(input);
 
 	//Initailze Permutation

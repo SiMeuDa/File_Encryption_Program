@@ -36,6 +36,9 @@ add_executable(File_Encryption_Program
 
 if(LOG)
 	target_compile_definitions(File_Encryption_Program PRIVATE LOG)
+	target_compile_options(File_Encryption_Program PRIVATE -O0 -g)
+else()
+	target_compile_options(File_Encryption_Program PRIVATE -O3)
 endif()
 
 target_include_directories(File_Encryption_Program
@@ -44,3 +47,11 @@ target_include_directories(File_Encryption_Program
 )
 
 
+# ============================================================
+# Test Program
+# ============================================================
+
+add_executable(Test_Program
+
+	test_generator/test.cpp
+)

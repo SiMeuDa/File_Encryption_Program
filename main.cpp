@@ -2,7 +2,7 @@
 #include "cryptologic/crypto.h" 
 //Crypto Logic
 #include "cryptologic/DES/DES.h"
-//#include "cryptologic/0DES/Triple_DES.h"
+#include "cryptologic/DES/Triple_DES.h"
 //#incldue "cryptologic/AES/AES_128.h"
 //operation modes
 #include "cryptologic/mode/mode.h"
@@ -247,6 +247,7 @@ bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool
 	//close file
 	fout.close();
 	fin.close();
+
 	delete[] wt_buffer;
 	delete[] rd_buffer;
 

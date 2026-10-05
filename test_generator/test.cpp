@@ -47,17 +47,17 @@ int main(int argc, char* argv[]) {
 	//open file
 	std::ofstream out(file_name, std::ios::binary);
 	//random number setting
-    std::mt19937_64 rng(std::random_device{}());
+    	std::mt19937_64 rng(std::random_device{}());
 
 	//set size
 	for(uint16_t i = 0; i < repeat; i++)
 		size *= 1024;
 
-    for (size_t i = 0; i < size; i++) 
+    	for (size_t i = 0; i < size; i++) 
 	{
-        char byte = rng() % 256;
-        out.write(&byte, 1);
-    }
+        	char byte = rng() % 256;
+        	out.write(&byte, 1);
+    	}
 	out.close();
 
 	return 0;

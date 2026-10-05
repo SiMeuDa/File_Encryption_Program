@@ -12,9 +12,6 @@ private:
 
 	std::array<uint64_t, 16> EnsubKey{};
 	std::array<uint64_t, 16> DesubKey{};
-	
-	uint64_t load64(const block, uint64_t);
-	void store64(uint64_t, block);
 
 	bool chkParity(const block) override;
 //Left Circular Shift for 28 bit
@@ -35,10 +32,13 @@ public:
 	DES() {}
 	DES(block key);
 	~DES();
-	void cipher(const block, block) const override;
-	void decipher(const block, block) const override;
+	void cipher(const block, block) override;
+	void decipher(const block, block) override;
 
 	void setParity(block) override;
 	size_t get_block_size(void) const noexcept override;
+	
+	uint64_t load64(const block);
+	void store64(uint64_t, block);
 };
 #endif

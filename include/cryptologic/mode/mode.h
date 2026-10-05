@@ -11,12 +11,13 @@ protected:
 
 	size_t block_len;
 	//padding: PKCS#7 Standard
-	//do padding
-	void padding(block);
-	//do unpadding
-	void unpadding(block);
+	//need to free memory
+	block padding(block, size_t);
+	//need to free memory
+	block unpadding(block, size_t);
 
 	//return random value
+	//need to free memory
 	block random(void);
 public:
 	mode() { block_len = 0; }
@@ -24,8 +25,9 @@ public:
 	mode(crypto::crypto_logic cl, block key);
 	virtual ~mode() {}
 
-	virtual BLOCK encrypt_mode(const block, bool eof) = 0;
-	virtual BLOCK decrypt_mode(const block, bool eof) = 0;
+	virtual void encrypt_mode(const block input, block& output, size_t& size, bool eof) = 0;
+	virtual void decrypt_mode(const block, block&, size_t&, bool) = 0;
+
 /*
 	//Electric CodeBook mode
 	//Cipher Block Chaining mode

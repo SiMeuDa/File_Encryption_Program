@@ -14,8 +14,8 @@ public:
 	Triple_DES(const block key1, const block key2);
 	~Triple_DES();
 
-	void cipher(const block, block) const override;
-	void decipher(const block, block) const override;
+	void cipher(const block, block) override;
+	void decipher(const block, block) override;
 	bool chkParity(const block) override;
 	size_t get_block_size(void) const noexcept override;
 };

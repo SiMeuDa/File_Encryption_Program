@@ -1,6 +1,5 @@
 #include "cryptologic/DES/feistel.h"
 #include <cstdint>
-#include <vector>
 
 //diffusion confusion
 inline uint32_t feistel::F(uint32_t R, uint64_t subkey)

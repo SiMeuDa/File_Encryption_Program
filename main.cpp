@@ -1,15 +1,14 @@
 //Base Header
 #include "cryptologic/crypto.h" 
-#include "cryptologic/block.h"
 //Crypto Logic
 #include "cryptologic/DES/DES.h"
-//#include "cryptologic/DES/Triple_DES.h"
+#include "cryptologic/DES/Triple_DES.h"
 //#incldue "cryptologic/AES/AES_128.h"
 //operation modes
 #include "cryptologic/mode/mode.h"
 #include "cryptologic/mode/CTR.h"
 //muti-threading queue
-#include "interface/thread_queue.h"
+//#include "interface/thread_queue.h"
 #include <thread>
 #include <future>
 //STDIO
@@ -19,7 +18,6 @@
 #include <filesystem>
 #include <cstring>
 //data manipulate class(for API input)
-#include <vector>
 #include <cstdint>
 #include <array>
 //user input
@@ -30,15 +28,11 @@
 #include <memory>
 #include <functional>
 
-//for debug log
-#ifdef LOG
-void log(const char* msg){ std::clog << "[SYSTEM]: " << msg << std::endl;}
-#endif
 
 namespace fs = std::filesystem;
 
 bool setPath(fs::path& p);
-bool do_stream(fs::path, std::function<BLOCK(const BLOCK&)>);
+bool do_stream(fs::path, std::function<void(const block, block&, size_t&, bool)>);
 
 int main(void)
 {
@@ -46,13 +40,10 @@ int main(void)
 	menu m;
 	int choice = 0;
 	uint64_t int_key = 0, int_key2 = 0;
-	BLOCK key;
+	block key;
 	bool isSetFile = false, isEncryption = true;
 	mode* op_mode;
 	crypto::crypto_logic cLog;
-#ifdef LOG
-	log("Start File En/Decryption Program");
-#endif
 	
 	while(true)
 	{
@@ -70,6 +61,7 @@ int main(void)
 				isEncryption = true;
 			else if(choice == 2)
 				isEncryption = false;
+			
 			//set Crypto Logic(DES, Triple DES, AES, etc..)
 			m.crypto_logic(choice);
 			
@@ -83,24 +75,8 @@ int main(void)
 			cLog = static_cast<crypto::crypto_logic>(choice - 1);
 
 			//set Key Logic
-#ifdef LOG
-			log("Start to get key");
-#endif
-			std::cout << "Key Input: ";
-			std::cin >> int_key;
-
-			key = block::to_block(int_key);
-
-			if(cLog == crypto::crypto_logic::Triple_DES){
-				std::cout << "Key 2 Input: ";
-				std::cin >> int_key2;
-				BLOCK key_app = block::to_block(int_key2);
-				
-				key.insert(key.end(), key_app.begin(), key_app.end());
-			}
-#ifdef LOG
-			log("Success to get and interpret key");
-#endif
+			m.take_key(cLog, key);
+			
 			//set operation mode
 			m.op_mode(choice);
 			
@@ -133,11 +109,13 @@ int main(void)
 
 			if(isEncryption)
 			{
-				do_stream(p, [op_mode](const BLOCK& msg) -> BLOCK { return op_mode->encrypt_mode(msg);});
+				do_stream(p, [op_mode](const block msg, block& output, size_t& size, bool eof) 
+				{ op_mode->encrypt_mode(msg, output, size, eof);});
 			}
 			else
 			{
-				do_stream(p, [op_mode](const BLOCK& msg) -> BLOCK { return op_mode->decrypt_mode(msg);});
+				do_stream(p, [op_mode](const block msg, block& output, size_t& size, bool eof)
+				{ op_mode->decrypt_mode(msg, output, size, eof);});
 			}
 
 			delete op_mode;
@@ -210,69 +188,50 @@ bool setPath(fs::path& p)
 	return true;
 }
 
-bool do_stream(fs::path p, std::function<BLOCK(const BLOCK&)> run)
+bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool)> run)
 {
 	std::ofstream fout;
 	std::ifstream fin;
-	//1024 byte = 1KB
-	char buffer[1024];
-	BLOCK B_buffer;
+	size_t buffer_size = 1024 * 256;
+	//1024 * 1024 byte = 1024 KB = 1 MB
+	block rd_buffer = new uint8_t[buffer_size];
+	block wt_buffer = new(std::nothrow) uint8_t[buffer_size];
+	if(wt_buffer == nullptr)
+	{
+		delete[] rd_buffer;
+		return false;
+	}
+
 	//make temp and rename
 	fs::path temp_path = p;
 	temp_path += ".tmp";
 
-#ifdef LOG
-	log("Start to open File");
-#endif
 	fout.open(temp_path, std::ios::binary);
 	if(fout.fail())
 		return false;
+
 	fin.open(p, std::ios::binary);
 	if(fin.fail())
 	{
 		fout.close();
 		return false;
 	}
-#ifdef LOG
-	log("Success to open File");
-	log("Start to loop");
-#endif
 	while(true)
 	{
-#ifdef LOG
-		log("Start to read and interpret file");
-#endif
-		fin.read(buffer, sizeof(buffer));
-		std::streamsize size = fin.gcount();
+		fin.read(reinterpret_cast<char*>(rd_buffer), buffer_size);
+		//if use size_t, it can cause overflow
+		std::streamsize raw_size = fin.gcount();
 
-		if(size <= 0)
-		{
-#ifdef LOG
-			if(fin.eof())
-				log("File is Normally readch EOF");
-			else if(fin.fail())
-				log("Stream Failbit occur");
-			else if(fin.bad())
-				log("Stream Badbit Occur");
-			std::cout << "size: " << size << std::endl;
-#endif
+		if(raw_size <= 0)
 			break;
-		}
-		B_buffer.resize(size);
-		//interpret to vector<byte>
-		std::memcpy(B_buffer.data(), buffer, size);
-#ifdef LOG
-		log("Success to read and interpret file");
-		log("Start to run crypto logic");
-#endif
+			
+		size_t size = static_cast<size_t>(raw_size);
+
 		try{
 			//do crypto logic (have exception logic)
-			BLOCK result = run(B_buffer);
-#ifdef LOG
-			log("Success to run crypto logic");
-			log("Start to write file");
-#endif
-			fout.write(reinterpret_cast<const char*>(result.data()), result.size());
+			run(rd_buffer, wt_buffer, size, fin.eof());
+			
+			fout.write(reinterpret_cast<char*>(wt_buffer), size);
 		}catch(std::exception& e)
 		{
 			//close file
@@ -284,13 +243,13 @@ bool do_stream(fs::path p, std::function<BLOCK(const BLOCK&)> run)
 			std::cerr << "[ERROR]: " << e.what() << std::endl;
 			return false;
 		}
-#ifdef LOG
-		log("Success to write file");
-#endif
 	}
 	//close file
 	fout.close();
 	fin.close();
+
+	delete[] wt_buffer;
+	delete[] rd_buffer;
 
 	fs::rename(temp_path, p);
 

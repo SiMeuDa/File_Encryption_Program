@@ -1,6 +1,5 @@
 #include "cryptologic/DES/feistel.h"
 #include <cstdint>
-#include <vector>
 
 //diffusion confusion
 inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
@@ -124,7 +123,7 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	return pboxRes;
 }
 
-uint64_t feistel::round(uint64_t msg, std::vector<uint64_t>& key)
+uint64_t feistel::round(uint64_t msg, std::array<uint64_t, 16>& key)
 {
 	uint32_t L = 0, R = 0, temp;
 	uint64_t result = 0;

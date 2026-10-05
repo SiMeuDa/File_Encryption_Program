@@ -2,23 +2,41 @@
 #include "cryptologic/DES/DES.h"
 #include "cryptologic/DES/Triple_DES.h"
 #include <cstdint>
-#include <cstddef>
-#include <vector>
-#include <string>
+#include <cstring>
 #include <random>
-#include <string_view>
 #include <stdexcept>
 
-mode::mode(crypto::crypto_logic cl, BLOCK key)
+mode::mode(crypto::crypto_logic cl, block key)
 {
 	if(cl == crypto::crypto_logic::DES)
-		crypto_ptr = std::make_unique<DES>(key);
+		crypto_ptr = new DES(key);
 	else if(cl == crypto::crypto_logic::Triple_DES)
 	{
-		BLOCK key2 = key;
-		key2.erase(key2.begin(), key2.begin() + 8);
+		block div_key[2];
+		div_key[0] = new uint8_t[8];
 
-		crypto_ptr = std::make_unique<Triple_DES>(key, key2);
+		div_key[1] = new (std::nothrow) uint8_t[8];
+		if(div_key[1] == nullptr)
+		{
+			delete[] div_key[0];
+
+			throw std::bad_alloc();
+		}
+
+		for(int i = 0; i < 8; i++)
+		{
+			(div_key[0])[i] = key[i];
+			(div_key[1])[i] = key[i + 8];
+		}
+
+		crypto_ptr = new (std::nothrow) Triple_DES(div_key[0], div_key[1]);
+		if(crypto_ptr == nullptr)
+		{
+			delete[] div_key[1];
+			delete[] div_key[0];
+
+			throw std::bad_alloc();
+		}
 	}
 	else
 		throw std::invalid_argument("Invalid Crypto Logic");
@@ -26,84 +44,58 @@ mode::mode(crypto::crypto_logic cl, BLOCK key)
 	block_len = crypto_ptr->get_block_size();
 }
 
-BLOCK mode::padding(const BLOCK& msg)
+block mode::padding(block msg, size_t msg_size)
 {	
-	if(msg.empty())
+	if(msg == nullptr)
 		return msg;
-
-	//copy msg
-	BLOCK result = msg;
-	//take padding number(PKCS#7 Standard)
-	size_t padding_num = block_len - (result.size() % block_len);
 	
+	//copy msg
+	//take padding number(PKCS#7 Standard)
+	uint8_t padding_num = block_len - (msg_size % block_len);
+	
+	block result = new uint8_t[msg_size + padding_num];
+
+	std::memcpy(result, msg, msg_size);
+
 	//do padding(PKCS#7 Standard)
-	result.insert(result.end(), padding_num, static_cast<std::byte>(padding_num));
+	for(size_t i = msg_size; i < msg_size + padding_num; i++)
+		result[i] = padding_num;
 
 	return result;
 }
 
-BLOCK mode::unpadding(const BLOCK& msg)
+block mode::unpadding(block msg, size_t msg_size)
 {
-	if(msg.empty() || (msg.size() % block_len != 0))
+	if(msg == nullptr || (msg_size % block_len != 0))
 		return msg;
 
 	//take padding number(PKCS#7 Standard)
-	size_t padding_num = static_cast<size_t>(msg.back());
+	uint8_t padding_num = msg[msg_size - 1];
 	
 	//check padding number validation
-	if(padding_num == 0 || padding_num > block_len || padding_num > msg.size())
+	if(padding_num == 0 || padding_num > block_len || padding_num > msg_size)
 		return msg;
 
 	//check padding byte and msg string
-	for(auto it = msg.end() - padding_num; it != msg.end(); ++it)
-		if(static_cast<size_t>(*it) != padding_num)
+	for(size_t i = msg_size - padding_num; i < msg_size; i++)
+		if(msg[i] != padding_num)
 			return msg;
 
-	return BLOCK(msg.begin(), msg.end() - padding_num);
+	block result = new uint8_t[msg_size - padding_num];
+
+	std::memcpy(result, msg, msg_size - padding_num);
+
+	return result;
 }
 
-BLOCK mode::random(void)
+block mode::random(void)
 {
-	BLOCK result(block_len);
+	block result = new uint8_t[block_len];
 	
 	std::random_device rd;
 	
 	for(size_t i = 0; i < block_len; i++)
-		result[i] = static_cast<std::byte>(rd() & 0xFF);
-
-	return result;
-}
-
-
-BLOCK mode::to_block(std::string_view msg)
-{
-	//for using repeatence
-	int block_count = msg.length();
-
-	//Definition and Initialization of Result
-	BLOCK result(block_count);
-	
-	//save string each block
-	//casting to byte
-	//shift 8 * (8 - j - 1)
-	for(int i = 0; i < block_count; i++)
-		result[i] |= static_cast<std::byte>(static_cast<unsigned char>(msg[i]));
-
-	return result;
-}
-
-std::string mode::from_block(BLOCK blo)
-{
-	//char = 1byte
-	std::string result;
-	//byte = 1byte
-	size_t size = blo.size();
-
-	//string length == vector size
-	result.resize(size);
-
-	for(size_t i = 0; i < size; i++)
-		result[i] = static_cast<char>(blo[i]);
+		result[i] = rd() & 0xFF;
 
 	return result;
 }

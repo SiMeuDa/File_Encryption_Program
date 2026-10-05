@@ -1,10 +1,11 @@
 #include "cryptologic/mode/CTR.h"
 #include "cryptologic/mode/mode.h"
+#include "cryptologic/crypto.h"
 #include "cryptologic/DES/DES.h"
 #include "cryptologic/DES/Triple_DES.h"
-#include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <cstring>
+#include <stdexcept>
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -12,97 +13,147 @@
 #include <iostream>
 #endif
 
-BLOCK CTR::encrypt_mode(const BLOCK& msg)
+CTR::CTR(crypto::crypto_logic cl, block key) : mode(cl, key), isFirst(true){}
+
+CTR::~CTR(){}
+
+void CTR::set_counter(void)
 {
-	BLOCK result = msg, counter_result, init_counter;	
-	
-	if(result.empty() || block_len == 0)
-		return result;
+	//initialize counter
+	counter = random();
+	result_counter = new(std::nothrow) uint8_t[block_len];
 
-	if(isFirst)
+	if(result_counter == nullptr)
 	{
-		counter = random();
-
-		for(auto it = counter.end() - (block_len / 2); it != counter.end(); ++it)
-			*it = std::byte{0x00};
-		init_counter = counter;
+		delete[] counter;
+		throw std::bad_alloc();
 	}
+	for(size_t i = block_len - (block_len / 2); i < block_len; i++)
+		counter[i] = 0x00;
 
-	size_t size = result.size();
-
-	for(size_t i = 0; i < size; i += block_len)
-	{
-		//do cipher
-		counter_result = crypto_ptr->cipher(counter);
-		
-		size_t real_size = (block_len > size - i) ? size - i : block_len;
-
-		//do xor
-		for(size_t j = 0; j < real_size; j++)
-			result[i + j] ^= counter_result[j];
-		//increase counter
-		counter = block::increment(counter);
-	}
-
-	if(isFirst)
-	{
-		result.insert(result.begin(), init_counter.begin(), init_counter.end());
-		
-		isFirst = false;
-	}
-
-	return result;
+	std::memcpy(result_counter, counter, block_len * sizeof(int8_t));
 }
 
-BLOCK CTR::decrypt_mode(const BLOCK& msg) 
-{ 
-	BLOCK result = msg, counter_result;	
 
-	if(result.empty() || block_len == 0 || 
-	(result.size() <= block_len && isFirst))
-		return result;
+void CTR::increment(block value)
+{
+	if(value == nullptr)
+		return;
+	
+	for(size_t i = 0; i < block_len; i++)
+	{
+		if(value[block_len - 1 - i] != 0xFF)
+		{
+			++value[block_len - 1 - i];
+			break;
+		}
+		else
+			value[block_len - 1 - i] = 0;
+	}
+}
+
+void CTR::encrypt_mode(const block msg, block& output, size_t& size, bool eof)
+{
+	if(msg == nullptr || output == nullptr ||	
+		size == 0 || block_len == 0)
+		return;
+
+	size_t i = 0;
+
+	if(isFirst)
+	{
+		set_counter();
+
+		delete[] output;
+
+		output = new uint8_t[size + block_len];
+
+		std::memcpy(output, counter, block_len * sizeof(uint8_t));
+
+		size += block_len;
+
+		i = block_len;
+	}
+
+
+	for(; i < size; i += block_len)
+	{
+		//do cipher
+		crypto_ptr->cipher(counter, result_counter);
+		
+		size_t real_size = (block_len > size - i) ? size - i : block_len;
+
+		//do xor
+		if(!isFirst)
+			for(size_t j = 0; j < real_size; j++)
+				output[i + j] = msg[i + j] ^ result_counter[j];
+		else
+			for(size_t j = 0; j < real_size; j++)
+				output[i + j] = msg[i + j - block_len] ^ result_counter[j];
+
+		//increase counter
+		increment(counter);
+	}
+
+	if(eof)
+	{               
+		delete[] counter;
+		delete[] result_counter;
+
+		isFirst = true;
+	}
+	else if(isFirst)
+	{
+		isFirst = false;
+	}
+}
+
+void CTR::decrypt_mode(const block msg, block& output, size_t& size, bool eof) 
+{ 
+	if(size == 0 || block_len == 0 || 
+	(size <= block_len && isFirst))
+		return;
+
 	
 	if(isFirst)
 	{
-#ifdef LOG
-		std::clog << "[SYSTEM]: Start to divde counter from vector" << std::endl;
-#endif
-		counter.resize(block_len);
+		delete[] output;
+		
+		set_counter();
 
 		for(size_t i = 0; i < block_len; i++)
-			counter[i] = result[i];
-#ifdef LOG
-		std::clog << "[SYSTEM]: Start to erase counter in vector" << std::endl;
-#endif
-		result.erase(result.begin(), result.begin() + block_len);
+			counter[i] = msg[i];
+		
+		size = size - block_len;
+
+		output = new uint8_t[size];
+
+		std::memcpy(output, msg + block_len, size);
 
 		isFirst = false;
-#ifdef LOG
-		std::clog << "[SYSTEM]: Success to erase counter" << std::endl;
-		std::clog << "[SYSTEM]: Success to divide counter" << std::endl;
-#endif
+
 	}
 	
-	size_t size = result.size();
-
-#ifdef LOG
-	std::clog << "[SYSTEM]: Start to loop" << std::endl;
-#endif
 	for(size_t i = 0; i < size; i += block_len)
 	{
 		//do cipher
-		counter_result = crypto_ptr->cipher(counter);
+		crypto_ptr->cipher(counter, result_counter);
 
 		size_t real_size = (block_len > size - i) ? size - i : block_len;
+
 		//do xor
 		for(size_t j = 0; j < real_size; j++)
-			result[i + j] ^= counter_result[j];
+			output[i + j] ^= result_counter[j];
 
 		//increase counter
-		counter = block::increment(counter);
+		increment(counter);
 	}
-#ifdef LOG
-	std::clog << "[SYSTEM]: Success to loop" << std::endl;
-#endif
-	return result;
+
+	if(eof)
+	{
+
+		delete[] counter;
+		delete[] result_counter;
+		isFirst = true;
+	}
 }

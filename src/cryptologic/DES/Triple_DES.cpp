@@ -1,20 +1,18 @@
 #include "cryptologic/DES/Triple_DES.h"
 #include "cryptologic/DES/DES.h"
-#include <exception>
 #include <cstdint>
-#include <vector>
+#include <stdexcept>
 
-Triple_DES::Triple_DES(BLOCK key, BLOCK key2)
+Triple_DES::Triple_DES(const block key, const block key2)
 {
-	if(key2.empty())
-		key2 = key;
-
-	des_ptr[0] = new DES(key);
-	if(des_ptr[0] == nullptr)
+	if(key == nullptr ||
+	key2 == nullptr)
 		throw std::bad_alloc();
 
-	des_ptr[1] = new DES(key2);
-	if(des_ptr == nullptr)
+	des_ptr[0] = new DES(key);
+
+	des_ptr[1] = new(std::nothrow) DES(key2);
+	if(des_ptr[1] == nullptr)
 	{
 		delete des_ptr[0];
 
@@ -28,56 +26,84 @@ Triple_DES::~Triple_DES()
 	delete des_ptr[0];
 }
 
-BLOCK Triple_DES::cipher(BLOCK msg)
+void Triple_DES::cipher(const block msg, block output)
 {
-	msg = des_ptr[0]->cipher(msg);
-	msg = des_ptr[1]->decipher(msg);
-	msg = des_ptr[0]->cipher(msg);
+	if(msg == nullptr ||
+	output == nullptr)
+		return;
 
-	return msg;
-}
-
-BLOCK Triple_DES::decipher(BLOCK msg)
-{
-	msg = des_ptr[0]->decipher(msg);
-	msg = des_ptr[1]->cipher(msg);
-	msg = des_ptr[0]->decipher(msg);
-
-	return msg;
-}
-
-bool Triple_DES::chkParity(const BLOCK& key)
-{
-	for(size_t i = 0; i < key.size(); i++)
+	block temp[2];
+       	
+	temp[0]	= new uint8_t[8];
+	temp[1] = new(std::nothrow) uint8_t[8];
+	if(temp[1] == nullptr)
 	{
-		std::byte group = key[i];
+		delete[] temp[0];
+		throw std::bad_alloc();
+	}
+
+	des_ptr[0]->cipher(msg, temp[0]);
+	des_ptr[1]->decipher(temp[0], temp[1]);
+	des_ptr[0]->cipher(temp[1], output);
+
+	delete[] temp[1];
+	delete[] temp[0];
+}
+
+void Triple_DES::decipher(const block msg, block output)
+{
+	if(msg == nullptr ||
+	output == nullptr)
+		return;
+
+	block temp[2];
+       	
+	temp[0]	= new uint8_t[8];
+	temp[1] = new(std::nothrow) uint8_t[8];
+	if(temp == nullptr)
+	{
+		delete temp[0];
+		throw std::bad_alloc();
+	}
+
+	des_ptr[0]->decipher(msg, temp[0]);
+	des_ptr[1]->cipher(temp[0], temp[1]);
+	des_ptr[0]->decipher(temp[1], output);
+	
+	delete[] temp[1];
+	delete[] temp[0];
+}
+
+bool Triple_DES::chkParity(const block key)
+{
+	for(size_t i = 0; i < 8; i++)
+	{
+		uint8_t group = key[i];
 
 		group ^= group >> 4;
 		group ^= group >> 2;
 		group ^= group >> 1;
 
-		if((group & std::byte{0x01}) == std::byte{0x00})
+		if((group & 0x01) == 0x00)
         		return false;
 	}
 
 	return true;
 }
 
-bool Triple_DES::setParity(BLOCK& key)
+void Triple_DES::setParity(block key)
 {
-	for(size_t i = 0; i < key.size(); i++)
+	for(size_t i = 0; i < 8; i++)
         {
-                std::byte group = key[i];
+                uint8_t group = key[i];
 
                 group ^= group >> 4;
                 group ^= group >> 2;
                 group ^= group >> 1;
 
-                if((group & std::byte{0x01}) == std::byte{0x00})
-                                key[i] ^= std::byte{0x01};
+                if((group & 0x01) == 0x00)
+                                key[i] ^= 0x01;
         }
-
-        return true;
 }
 
-size_t Triple_DES::get_block_size(void) { return block_size; }
+size_t Triple_DES::get_block_size(void) const noexcept { return block_size; }

@@ -1,64 +1,123 @@
 #include <fstream>
 #include <random>
 #include <iostream>
-#include <cstring>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 using namespace std::string_view_literals;
 
-int main(int argc, char* argv[]) {
-	if(argc != 3)
+struct ANSI
+{
+        ANSI() = delete;
+        //COLOR 
+        static constexpr std::string_view COLOR_RESET   = "\033[0m";
+        static constexpr std::string_view BLACK         = "\033[30m";
+        static constexpr std::string_view RED           = "\033[31m";
+        static constexpr std::string_view GREEN         = "\033[32m";
+        static constexpr std::string_view YELLOW        = "\033[33m";
+        static constexpr std::string_view BLUE          = "\033[34m";
+        static constexpr std::string_view MAGENTA       = "\033[35m";
+        static constexpr std::string_view CYAN          = "\033[36m";
+
+        //Screen & Cursor
+        static constexpr std::string_view SCR_RESET     = "\033[2J";
+        static constexpr std::string_view CUR_HOME      = "\033[H";
+};
+
+void loading(size_t, size_t);
+bool isVtype(char**, std::string&, size_t&, size_t&);
+
+int main(int argc, char* argv[]) 
+{
+	std::string file_name = "random_";
+	size_t buffer = 1, size = 0;
+
+
+	if(argc != 3 || !isVtype(argv, file_name, size, buffer))
 	{
-		std::cerr << "[Usage]: ./[file_name] -[B/KB/MB/GB] [size]" << std::endl;
+		std::cerr << ANSI::BLUE << "[Usage]: ./[file_name] -[B/KB/MB/GB] [size]" << ANSI::COLOR_RESET << std::endl;
 		return -1;
 	}
-	
-	uint16_t repeat = 0;
-	char file_name[30] = "random_";
-	char size_name[10] = "";
 
-	if(argv[1] == "-B"sv)
-		std::strncat(size_name, "B.bin\0", sizeof("B.bin\0"));
-	else if(argv[1] == "-KB"sv)
-	{
-		repeat = 1;
-		std::strncat(size_name, "KB.bin\0", sizeof("KB.bin\0"));
-	}
-	else if(argv[1] == "-MB"sv)
-	{
-		repeat = 2;
-		std::strncat(size_name, "MB.bin\0", sizeof("MB.bin\0"));
-	}
-	else if(argv[1] == "-GB"sv)
-	{
-		repeat = 3;
-		std::strncat(size_name, "GB.bin\0", sizeof("GB.bin\0"));
-	}
-	else{
-		std::cerr << "[Usage]: ./[file_name] -[B/KB/MB/GB] [size]" << std::endl;
-		return -1;
-	}
-
-	uint64_t size = static_cast<uint64_t>(atoi(argv[2]));
-	
-	//make name
-	std::strncat(file_name, argv[2], std::strlen(argv[2]));
-	std::strncat(file_name, size_name, std::strlen(size_name));
-	
 	//open file
 	std::ofstream out(file_name, std::ios::binary);
+	if(out.fail())
+	{
+		std::cerr << ANSI::RED << "[ERROR]: Failed to open file" << ANSI::COLOR_RESET << std::endl;
+		return -1;
+	}
 	//random number setting
     	std::mt19937_64 rng(std::random_device{}());
 
-	//set size
-	for(uint16_t i = 0; i < repeat; i++)
-		size *= 1024;
-
     	for (size_t i = 0; i < size; i++) 
 	{
-        	char byte = rng() % 256;
-        	out.write(&byte, 1);
+		loading(size, i);
+		for(size_t j = 0; j < buffer; j++)
+		{
+        		char byte = rng() % 256;
+        		out.write(&byte, 1);
+		}
     	}
+	
+	loading(size, size);
+
 	out.close();
 
 	return 0;
+}
+
+bool isVtype(char** argv, std::string& file, size_t& size, size_t& buffer)
+{
+	
+	buffer = 1;
+
+	std::string argument = argv[2];
+	const std::string Vtype[4] = { "-B", "-KB", "-MB", "-GB"};
+	try{
+		size = stoi(argument);
+		if(size > 1024)
+			throw std::invalid_argument("Key value is Too Big");
+	}catch(std::exception& e){
+		return false;
+	}
+	
+	argument = argv[1];
+
+	for(int i = 0; i < 4; i++)
+	{
+		if(argument.compare(Vtype[i]) == 0)
+		{
+			file.append(std::to_string(size)).append(argument.begin() + 1, argument.end()).append(".bin");
+			for(int j = 0; j < i; j++)
+				buffer *= 1024;
+			return true;
+		}
+	}
+
+	return false;
+
+}
+
+void loading(size_t total, size_t now)
+{
+	double percent = static_cast<double>(now);
+	percent = percent * 100.0 / total;
+	
+
+	std::clog << ANSI::CUR_HOME << ANSI::SCR_RESET;
+	if(total != now)
+	{
+		std::clog << ANSI::YELLOW;
+	        std::clog << "==============================" << std::endl;
+		std::clog << "Loading... (" << percent << "%)" << std::endl;
+		std::clog << "==============================" << std::endl;
+	}
+	else
+	{
+		std::clog << ANSI::GREEN;
+	        std::clog << "==============================" << std::endl;
+		std::clog << "Success to generate File" << std::endl;
+		std::clog << "==============================" << std::endl;
+	}	
+	std::clog << ANSI::COLOR_RESET << std::endl;
 }

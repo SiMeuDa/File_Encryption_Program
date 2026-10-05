@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-option(LOG "Enable logging features" ON)
+option(LOG "Enable logging features" OFF)
 
 # ============================================================
 # Main Program

@@ -38,7 +38,7 @@ if(LOG)
 	target_compile_definitions(File_Encryption_Program PRIVATE LOG)
 	target_compile_options(File_Encryption_Program PRIVATE -O0 -g)
 else()
-	target_compile_options(File_Encryption_Program PRIVATE -O3)
+	target_compile_options(File_Encryption_Program PRIVATE -O3 -march=native)
 endif()
 
 target_include_directories(File_Encryption_Program

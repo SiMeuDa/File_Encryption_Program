@@ -30,13 +30,14 @@ mode::mode(crypto::crypto_logic cl, block key)
 		}
 
 		crypto_ptr = new (std::nothrow) Triple_DES(div_key[0], div_key[1]);
-		if(crypto_ptr == nullptr)
-		{
-			delete[] div_key[1];
-			delete[] div_key[0];
 
+		//div_key use only for making subkey(array) -> don't use again
+		delete[] div_key[1];
+		delete[] div_key[0];
+
+		if(crypto_ptr == nullptr)
 			throw std::bad_alloc();
-		}
+
 	}
 	else
 		throw std::invalid_argument("Invalid Crypto Logic");

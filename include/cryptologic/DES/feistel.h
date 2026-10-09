@@ -7,14 +7,23 @@ class feistel{
 private:
 //key scheduled for 16 -> feistel cac 16 times
 	static constexpr int repeat = 16;
+	inline static bool isFirst = true;
+	inline static uint32_t SP_table[8][64];
+//substitue for e-box
+	inline static uint64_t expaned_e(uint32_t);
+//set S-P table
+	void setSP(void);
+
 //diffusion & confusion & key mix => main function
-	inline uint32_t F(uint32_t, uint64_t);
+	static uint32_t F(uint32_t, uint64_t);
+
+	static uint32_t chg_F(uint32_t, uint64_t);
 protected:
-	feistel() {};
-	~feistel(){};
+	feistel(){ if(isFirst) setSP(); }
+	~feistel(){}
 
 
-	uint64_t round(uint64_t, std::array<uint64_t, 16>&);
+	static uint64_t round(uint64_t, const std::array<uint64_t, repeat>&);
 
 };
 #endif

@@ -44,23 +44,13 @@ void Triple_DES::decipher(const block msg, block output)
 	if(msg == nullptr ||
 	output == nullptr)
 		return;
-
-	block temp[2];
-       	
-	temp[0]	= new uint8_t[8];
-	temp[1] = new(std::nothrow) uint8_t[8];
-	if(temp == nullptr)
-	{
-		delete temp[0];
-		throw std::bad_alloc();
-	}
-
-	des_ptr[0]->decipher(msg, temp[0]);
-	des_ptr[1]->cipher(temp[0], temp[1]);
-	des_ptr[0]->decipher(temp[1], output);
 	
-	delete[] temp[1];
-	delete[] temp[0];
+	uint8_t temp[8];
+       	
+	des_ptr[0]->decipher(msg, temp);
+	des_ptr[1]->cipher(temp, temp);
+	des_ptr[0]->decipher(temp, output);
+	
 }
 
 bool Triple_DES::chkParity(const block key)

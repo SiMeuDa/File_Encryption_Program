@@ -28,8 +28,8 @@ private:
 //Final Permutation
 	uint64_t FP(uint64_t);
 public:
-	//Make Sub Key vector
-	DES() {}
+	//do s-p table caculate call in first time
+	DES() : feistel() {}
 	DES(block key);
 	~DES();
 	void cipher(const block, block) override;

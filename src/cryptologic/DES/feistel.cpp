@@ -1,8 +1,10 @@
-#include "cryptologic/DES/feistel.h"
+#include "../../../include/cryptologic/DES/feistel.h"
 #include <cstdint>
+#include <iostream>
+#include <chrono>
 
 //diffusion confusion
-inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
+uint32_t feistel::F(uint32_t R, uint64_t subkey)
 {
 	//32bit -> 48bit
 	//each column has 6 -> prevent duplicate
@@ -81,6 +83,9 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 		19, 13, 30,  6, 22, 11,  4, 25
 		};
 
+	//time checking
+	std::chrono::high_resolution_clock::time_point start, end;
+	std::chrono::duration<double, std::nano> duration;
 	uint64_t eboxRes = 0;
 	
 	//extend to 48 bit
@@ -93,6 +98,8 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	
 	uint32_t sboxRes = 0;
 	uint8_t row, col, res;
+
+	start = std::chrono::high_resolution_clock::now();
 	
 	for(int i = 0; i < 8; i++)
 	{
@@ -108,6 +115,7 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 		col = (eboxRes >> (b[1] + 1)) & 0xF;
 
 		//set S box
+		//4 bit result
 		res = S_BOX[i][row][col];
 
 		sboxRes |= (static_cast<uint32_t>(res) << (4 * (7 - i)));
@@ -120,26 +128,21 @@ inline uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	//overhead
 	for(int i = 0; i < 32; i++)
 		pboxRes |= (((sboxRes >> (32 - P_BOX[i])) & 1) << (31 - i));
+	
+	
+	end = std::chrono::high_resolution_clock::now();
+
+	duration = end - start;
+
+	std::cout << "Taken Time: " << duration.count() << "ns" << std::endl;
 
 	return pboxRes;
 }
 
-//diffusion confusion
-inline uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
+void feistel::setSP(void)
 {
-	//32bit -> 48bit
-	//each column has 6 -> prevent duplicate
-	static constexpr int ebox_table[48] = {
-		32,  1,  2,  3,  4,  5,
-		 4,  5,  6,  7,  8,  9,
-		 8,  9, 10, 11, 12, 13,
-		12, 13, 14, 15, 16, 17,
-		16, 17, 18, 19, 20, 21,
-		20, 21, 22, 23, 24, 25,
-		24, 25, 26, 27, 28, 29,
-		28, 29, 30, 31, 32,  1
-	};
-	static constexpr int S_BOX[8][4][16] = {
+	isFirst = false;
+	static constexpr uint8_t S_BOX[8][4][16] = {
     {
 		// S1
         {14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7},
@@ -196,59 +199,89 @@ inline uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
         { 7, 11,  4,  1,  9, 12, 14,  2,  0,  6, 10, 13, 15,  3,  5,  8},
         { 2,  1, 14,  7,  4, 10,  8, 13, 15, 12,  9,  0,  3,  5,  6, 11}
     }
-};
-	static constexpr int P_BOX[32] =  {
+};	
+
+	static constexpr uint8_t P_BOX[32] =  {
 		16,  7, 20, 21, 29, 12, 28, 17,
 		 1, 15, 23, 26,  5, 18, 31, 10,
 		 2,  8, 24, 14, 32, 27,  3,  9,
 		19, 13, 30,  6, 22, 11,  4, 25
 		};
 
+	uint8_t row, col;
+
+	for(uint8_t i = 0; i < 8; i++)
+	{
+		for(uint8_t j = 0; j < 64; j++)
+		{//0b00/00/0000 
+			//init array value
+			SP_table[i][j] = 0;
+			//set row
+			//row is 2bit -> b1b6
+			row = ((j & 0x20) >> 5) | (j & 0x01);
+			//set column
+			//column is 4bit -> b2b3b4b5
+			col =  (j >> 1) & 0x0F;
+		
+			for(int k = 3; k >= 0; k--)
+				SP_table[i][j] |= ((S_BOX[i][row][col] >> k) & 0x01) << (P_BOX[4 * i + k] - 1);
+		}
+	}
+
+}
+
+//diffusion confusion
+uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
+{
+	//time checking
+	std::chrono::high_resolution_clock::time_point start, end;
+	std::chrono::duration<double, std::nano> duration;
+
+	//32bit -> 48bit
+	//each column has 6 -> prevent duplicate
+	static constexpr uint8_t ebox_table[48] = 
+	{
+		32,  1,  2,  3,  4,  5,
+		 4,  5,  6,  7,  8,  9,
+		 8,  9, 10, 11, 12, 13,
+		12, 13, 14, 15, 16, 17,
+		16, 17, 18, 19, 20, 21,
+		20, 21, 22, 23, 24, 25,
+		24, 25, 26, 27, 28, 29,
+		28, 29, 30, 31, 32,  1
+	};
+
 	uint64_t eboxRes = 0;
 	
 	//extend to 48 bit
 	//overhead
 	for(int i = 0; i < 48; i++)	// << 15 + ebox_table[i] - i
-		eboxRes |= ((uint64_t)((R >> (32 - ebox_table[i])) & 1) << (47 - i));
+		eboxRes |= (static_cast<uint64_t>((R >> (32 - ebox_table[i])) & 1)) << (47 - i);
 
 	//xor extend msg with 
 	eboxRes = eboxRes ^ subkey;
 	
-	uint32_t sboxRes = 0;
-	uint8_t row, col, res;
-	
+	uint32_t spboxRes = 0;
+	uint8_t index = 0;
+	start = std::chrono::high_resolution_clock::now();
+
+	//pre-calculated table
 	for(int i = 0; i < 8; i++)
 	{
-		//bit array
-		int b[2] = {	6 * (7 - i) + 5, 6 * (7 - i)	};
-		//set row
-		//row is 2bit -> b1b6
-		//0x21
-		row = (eboxRes >> (7 - i) & 0x21;
-
-		//set column
-		//column is 4bit -> b2b3b4b5
-		//0x1F
-		col = (eboxRes >> (7 - i)) & 0x1F;
-
-		//set S box
-		res = S_BOX[i][row][col];
-
-		sboxRes |= (static_cast<uint32_t>(res) << (4 * (7 - i)));
+		index = (eboxRes >> ((7 - i) * 6)) & 0x3F;
+		spboxRes = SP_table[i][index];
 	}
 
-	uint32_t pboxRes = 0;
+	end = std::chrono::high_resolution_clock::now();
+
+	duration = end - start;
+
+	std::cout << "Taken Time: " << duration.count() << "ns" << std::endl;
 	
-
-	//set P box
-	//overhead
-	for(int i = 0; i < 32; i++)
-		pboxRes |= (((sboxRes >> (32 - P_BOX[i])) & 1) << (31 - i));
-
-	return pboxRes;
+	return spboxRes;
 }
 
-uint64_t feistel::round(uint64_t msg, std::array<uint64_t, 16>& key)
+uint64_t feistel::round(uint64_t msg, const std::array<uint64_t, repeat>& key)
 {
 	uint32_t L = 0, R = 0, temp;
 	uint64_t result = 0;
@@ -268,11 +301,6 @@ uint64_t feistel::round(uint64_t msg, std::array<uint64_t, 16>& key)
 	//sum for uint64_t
 	result = static_cast<uint64_t>(R) << 32;
 	result |= static_cast<uint64_t>(L);
-
-	//Memory info Erase
-	*(volatile uint32_t*)&R = 0;
-	*(volatile uint32_t*)&L = 0;
-	*(volatile uint32_t*)&temp = 0;
-
+	
 	return result;
 }

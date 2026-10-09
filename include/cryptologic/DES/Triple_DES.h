@@ -1,12 +1,12 @@
 #ifndef TRIPLE_DES_H
 #define TRIPLE_DES_H
 #include <cstdint>
-#include "cryptologic/DES/feistel.h"
 #include "cryptologic/crypto.h"
+#include "cryptologic/DES/DES.h"
 
 class Triple_DES : public crypto {
 private:
-	crypto* des_ptr[2];
+	DES* des_ptr[2];
 	static constexpr size_t block_size = 8;
 	void setParity(block) override;
 public:

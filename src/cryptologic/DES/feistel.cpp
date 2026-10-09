@@ -128,6 +128,7 @@ uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	return pboxRes;
 }
 
+
 void feistel::setSP(void)
 {
 	isFirst = false;
@@ -233,11 +234,9 @@ void feistel::setSP(void)
 //diffusion confusion
 uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 {
-
+/*
 	//32bit -> 48bit
-	//each column has 6 -> prevent duplicate
-	static constexpr uint8_t ebox_table[48] = 
-	{
+	ebox table 
 		32,  1,  2,  3,  4,  5,
 		 4,  5,  6,  7,  8,  9,
 		 8,  9, 10, 11, 12, 13,
@@ -246,26 +245,22 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 		20, 21, 22, 23, 24, 25,
 		24, 25, 26, 27, 28, 29,
 		28, 29, 30, 31, 32,  1
-	};
 
-	uint64_t eboxRes = 0;
-	
-	//extend to 48 bit
-	//overhead
-	for(int i = 0; i < 48; i++)	// << 15 + ebox_table[i] - i
-		eboxRes |= (static_cast<uint64_t>((R >> (32 - ebox_table[i])) & 1)) << (47 - i);
+*/
+	//expand for 34 bit
+	uint64_t X = (static_cast<uint64_t>(R & 1) << 33)
+                     | (static_cast<uint64_t>(R) << 1)
+                     | (R >> 31);
 
-        //xor extend msg with 
-        eboxRes = eboxRes ^ subkey;
-
-	
 	uint32_t spboxRes = 0;
 	uint8_t index = 0;
 
 	//pre-calculated table
 	for(int i = 0; i < 8; i++)
 	{
-		index = (eboxRes >> ((7 - i) * 6)) & 0x3F;
+		//shift for 6 bit
+		//xor subkey
+		index = ((X >> (28 - 4 * i)) ^ (subkey >> (6 * (7 - i)))) & 0x3F;;
 		spboxRes |= SP_table[i][index];
 	}
 

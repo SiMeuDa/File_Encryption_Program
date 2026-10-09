@@ -9,7 +9,8 @@ private:
 	static constexpr int repeat = 16;
 	inline static bool isFirst = true;
 	inline static uint32_t SP_table[8][64];
-
+//substitue for e-box
+	inline static uint64_t expaned_e(uint32_t);
 //set S-P table
 	void setSP(void);
 

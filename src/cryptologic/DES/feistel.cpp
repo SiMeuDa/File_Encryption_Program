@@ -1,7 +1,5 @@
-#include "../../../include/cryptologic/DES/feistel.h"
+#include "cryptologic/DES/feistel.h"
 #include <cstdint>
-#include <iostream>
-#include <chrono>
 
 //diffusion confusion
 uint32_t feistel::F(uint32_t R, uint64_t subkey)
@@ -83,9 +81,6 @@ uint32_t feistel::F(uint32_t R, uint64_t subkey)
 		19, 13, 30,  6, 22, 11,  4, 25
 		};
 
-	//time checking
-	std::chrono::high_resolution_clock::time_point start, end;
-	std::chrono::duration<double, std::nano> duration;
 	uint64_t eboxRes = 0;
 	
 	//extend to 48 bit
@@ -100,7 +95,6 @@ uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	uint32_t sboxRes = 0;
 	uint8_t row, col, res;
 
-	start = std::chrono::high_resolution_clock::now();
 	
 	for(int i = 0; i < 8; i++)
 	{
@@ -131,12 +125,6 @@ uint32_t feistel::F(uint32_t R, uint64_t subkey)
 		pboxRes |= (((sboxRes >> (32 - P_BOX[i])) & 1) << (31 - i));
 	
 	
-	end = std::chrono::high_resolution_clock::now();
-
-	duration = end - start;
-
-	std::cout << "Taken Time: " << duration.count() << "ns" << std::endl;
-
 	return pboxRes;
 }
 
@@ -213,7 +201,7 @@ void feistel::setSP(void)
 	uint8_t P_shift[32];
 
 	for(uint8_t i = 0; i < 32; i++)
-		P_shift[P_BOX[i] - 1] = (31 - i);
+		P_shift[P_BOX[i] - 1] = 31 - i;
 
 	uint8_t row, col;
 
@@ -232,8 +220,9 @@ void feistel::setSP(void)
 			
 			//move bit depending on P shift (by P box)
 			//single bit movement
+			//on P shift index, that is much more easy to understand
 			for(int k = 0; k < 4; k++)
-				SP_table[i][j] |= ((S_BOX[i][row][col] >> k) & 0x01) << P_shift[4 * (7 - i) + k];
+				SP_table[i][j] |= ((S_BOX[i][row][col] >> k) & 0x01) << P_shift[31 - (4 * (7 - i) + k)];
 	
 		}
 
@@ -244,9 +233,6 @@ void feistel::setSP(void)
 //diffusion confusion
 uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 {
-	//time checking
-	std::chrono::high_resolution_clock::time_point start, end;
-	std::chrono::duration<double, std::nano> duration;
 
 	//32bit -> 48bit
 	//each column has 6 -> prevent duplicate
@@ -275,7 +261,6 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 	
 	uint32_t spboxRes = 0;
 	uint8_t index = 0;
-	start = std::chrono::high_resolution_clock::now();
 
 	//pre-calculated table
 	for(int i = 0; i < 8; i++)
@@ -284,12 +269,6 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 		spboxRes |= SP_table[i][index];
 	}
 
-	end = std::chrono::high_resolution_clock::now();
-
-	duration = end - start;
-
-	std::cout << "Taken Time: " << duration.count() << "ns" << std::endl;
-	
 	return spboxRes;
 }
 
@@ -306,7 +285,7 @@ uint64_t feistel::round(uint64_t msg, const std::array<uint64_t, repeat>& key)
 	for(int i = 0; i < repeat; i++)
 	{
 		temp = R;
-		R = F(R, key[i]);
+		R = chg_F(R, key[i]);
 		R = L ^ R;
 		L = temp;
 	}

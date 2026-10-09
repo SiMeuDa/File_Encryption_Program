@@ -2,10 +2,9 @@
 #define FEISTEL_H
 #include <cstdint>
 #include <array>
-#include <chrono>
 
 class feistel{
-	public:
+private:
 //key scheduled for 16 -> feistel cac 16 times
 	static constexpr int repeat = 16;
 	inline static bool isFirst = true;
@@ -18,13 +17,9 @@ class feistel{
 	static uint32_t F(uint32_t, uint64_t);
 
 	static uint32_t chg_F(uint32_t, uint64_t);
-public:
-	feistel()
-	{ 
-		if(isFirst)
-			setSP(); 
-	};
-	~feistel(){};
+protected:
+	feistel(){ if(isFirst) setSP(); }
+	~feistel(){}
 
 
 	static uint64_t round(uint64_t, const std::array<uint64_t, repeat>&);

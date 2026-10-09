@@ -91,11 +91,12 @@ uint32_t feistel::F(uint32_t R, uint64_t subkey)
 	//extend to 48 bit
 	//overhead
 	for(int i = 0; i < 48; i++)	// << 15 + ebox_table[i] - i
-		eboxRes |= ((uint64_t)((R >> (32 - ebox_table[i])) & 1) << (47 - i));
+		eboxRes |= static_cast<uint64_t>((R >> (32 - ebox_table[i])) & 1) << (47 - i);
+	
 
 	//xor extend msg with 
 	eboxRes = eboxRes ^ subkey;
-	
+
 	uint32_t sboxRes = 0;
 	uint8_t row, col, res;
 
@@ -209,10 +210,10 @@ void feistel::setSP(void)
 		19, 13, 30,  6, 22, 11,  4, 25
 	};
 
-	uint8_t P_shift[32];{};
+	uint8_t P_shift[32];
 
 	for(uint8_t i = 0; i < 32; i++)
-		P_shift[P_BOX[i] - 1] = (0x10 - i);
+		P_shift[P_BOX[i] - 1] = (31 - i);
 
 	uint8_t row, col;
 
@@ -228,14 +229,14 @@ void feistel::setSP(void)
 			//set column
 			//column is 4bit -> b2b3b4b5
 			col =  (j >> 1) & 0x0F;
-
 			
 			//move bit depending on P shift (by P box)
 			//single bit movement
-			for(int k = 3; k >= 0; k--)
-				SP_table[i][j] |= ((S_BOX[i][row][col] >> k) & 0x01) << P_shift[4 * i + k];
+			for(int k = 0; k < 4; k++)
+				SP_table[i][j] |= ((S_BOX[i][row][col] >> k) & 0x01) << P_shift[4 * (7 - i) + k];
 	
 		}
+
 	}
 
 }
@@ -268,8 +269,9 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 	for(int i = 0; i < 48; i++)	// << 15 + ebox_table[i] - i
 		eboxRes |= (static_cast<uint64_t>((R >> (32 - ebox_table[i])) & 1)) << (47 - i);
 
-	//xor extend msg with 
-	eboxRes = eboxRes ^ subkey;
+        //xor extend msg with 
+        eboxRes = eboxRes ^ subkey;
+
 	
 	uint32_t spboxRes = 0;
 	uint8_t index = 0;

@@ -3,13 +3,13 @@
 ![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 
 
-**File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)를 직접 구현하였으며, 멀티스레딩를 적용했습니다.
+**File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)을 직접 구현하였으며, 멀티스레딩를 적용했습니다.
 
 ## 🚀 Key Features
 
 * **Symmetric-Key Cryptography**: 
     * **DES & 3DES** 알고리즘 구현.
-    * **운영 모드 (Operation Mode)** 모드 등을 지원하여 블록 암호의 안전한 운용 가능.
+    * **운영 모드 (Operation Mode)** 를 지원하여 블록 암호의 안전한 운용 가능.
 * **Performance Optimization**: 
     * `std::thread`를 활용한 병렬 처리를 통해 대용량 파일 암호화 시 CPU 자원을 효율적으로 사용합니다. (not yet)
 * **System-Level Programming**: 
@@ -45,25 +45,22 @@
 │       ├── menu.cpp                # 메뉴 출력 & 색 지정
 │       └──  thread_queue.h         # 멀티스레딩용 queue
 ├── test_case_generator/
-│       └── test.cpp               # KB 단위 테스트 텍스트 파일 생성
+│       └── test.cpp               # 지정 단위 테스트 텍스트 파일 생성
 └── README.md
 ```
 
 ## 💻 Usage
 **빌드 방법**
 
-    [Main Program]
+    [Main & Test Program]
 
     cmake 실행
     cmake -S . -B build
 
     make 실행
     make -C build
-    
-    [Test Program]
-    
-    g++ test.cpp
-
+ 
+   
 **실행 예시**
 
 1. 파일 암호화 

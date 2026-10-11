@@ -1,17 +1,15 @@
-#include "cryptologic/mode/CTR.h"
+//crypto API
+#include "cryptologic/mode/op_mode/CTR.h"
 #include "cryptologic/mode/mode.h"
 #include "cryptologic/crypto.h"
-#include "cryptologic/DES/DES.h"
-#include "cryptologic/DES/Triple_DES.h"
+
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+//multi-threading
 #include <thread>
 #include <chrono>
 #include <atomic>
-#ifdef LOG
-#include <iostream>
-#endif
 
 CTR::CTR(crypto::crypto_logic cl, block key) : mode(cl, key), isFirst(true){}
 

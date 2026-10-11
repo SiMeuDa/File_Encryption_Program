@@ -6,7 +6,7 @@
 //#incldue "cryptologic/AES/AES_128.h"
 //operation modes
 #include "cryptologic/mode/mode.h"
-#include "cryptologic/mode/CTR.h"
+#include "cryptologic/mode/op_mode/CTR.h"
 #include "cryptologic/mode/op_mode/ECB.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"

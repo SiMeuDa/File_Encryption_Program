@@ -47,8 +47,8 @@ mode::mode(crypto::crypto_logic cl, block key)
 
 block mode::padding(block msg, size_t& msg_size)
 {	
-	if(msg == nullptr)
-		return msg;
+	if((msg == nullptr) || (msg_size > 256))
+		throw std::invalid_argument("Invalid input value");
 	
 	//copy msg
 	//take padding number(PKCS#7 Standard)
@@ -70,7 +70,7 @@ block mode::padding(block msg, size_t& msg_size)
 block mode::unpadding(block msg, size_t& msg_size)
 {
 	if(msg == nullptr || (msg_size % block_len != 0))
-		return msg;
+		throw std::invalid_argument("Invalid Input value");
 
 	//take padding number(PKCS#7 Standard)
 	uint8_t padding_num = msg[msg_size - 1];
@@ -84,11 +84,9 @@ block mode::unpadding(block msg, size_t& msg_size)
 		if(msg[i] != padding_num)
 			return msg;
 
-	msg_size -= padding_num;
-	
-	block result = new uint8_t[msg_size];
+	block result = new uint8_t[msg_size - padding_num];
 
-	std::memcpy(result, msg, msg_size);
+	std::memcpy(result, msg, msg_size - padding_num);
 
 	return result;
 }

@@ -100,6 +100,9 @@ int main(void)
 				}else if(choice == 9){
 					m.MESSAGE("Go Back to Main Menu...", 1);
 					continue;
+				}else{
+					m.MESSAGE("Invalid input", -1);
+					continue;
 				}
 			}catch(std::exception& e){
 				std::cerr << "[ERROR]: " << e.what() << std::endl;

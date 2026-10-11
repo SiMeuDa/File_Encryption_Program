@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-option(LOG "Enable logging features" OFF)
+option(LOG "Enable logging features" ON)
 
 # ============================================================
 # Main Program
@@ -28,6 +28,7 @@ add_executable(File_Encryption_Program
     # Operation Modes
     src/cryptologic/mode/mode.cpp
     src/cryptologic/mode/CTR.cpp
+    src/cryptologic/mode/op_mode/ECB.cpp
 
     # interface
     src/interface/menu.cpp

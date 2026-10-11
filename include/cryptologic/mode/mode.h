@@ -12,9 +12,9 @@ protected:
 	size_t block_len;
 	//padding: PKCS#7 Standard
 	//need to free memory
-	block padding(block, size_t);
+	block padding(block, size_t&);
 	//need to free memory
-	block unpadding(block, size_t);
+	block unpadding(block, size_t&);
 
 	//return random value
 	//need to free memory

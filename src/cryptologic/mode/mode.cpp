@@ -45,7 +45,7 @@ mode::mode(crypto::crypto_logic cl, block key)
 	block_len = crypto_ptr->get_block_size();
 }
 
-block mode::padding(block msg, size_t msg_size)
+block mode::padding(block msg, size_t& msg_size)
 {	
 	if(msg == nullptr)
 		return msg;
@@ -62,10 +62,12 @@ block mode::padding(block msg, size_t msg_size)
 	for(size_t i = msg_size; i < msg_size + padding_num; i++)
 		result[i] = padding_num;
 
+	msg_size += padding_num;
+
 	return result;
 }
 
-block mode::unpadding(block msg, size_t msg_size)
+block mode::unpadding(block msg, size_t& msg_size)
 {
 	if(msg == nullptr || (msg_size % block_len != 0))
 		return msg;
@@ -82,9 +84,11 @@ block mode::unpadding(block msg, size_t msg_size)
 		if(msg[i] != padding_num)
 			return msg;
 
-	block result = new uint8_t[msg_size - padding_num];
+	msg_size -= padding_num;
+	
+	block result = new uint8_t[msg_size];
 
-	std::memcpy(result, msg, msg_size - padding_num);
+	std::memcpy(result, msg, msg_size);
 
 	return result;
 }

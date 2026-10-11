@@ -7,6 +7,7 @@
 //operation modes
 #include "cryptologic/mode/mode.h"
 #include "cryptologic/mode/CTR.h"
+#include "cryptologic/mode/op_mode/ECB.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"
 #include <thread>
@@ -84,8 +85,7 @@ int main(void)
 			m.op_mode(choice);
 			try{
 				if(choice == 1){
-					m.MESSAGE();
-					continue;
+					op_mode = new ECB(cLog, key);
 				}else if(choice == 2){
 					m.MESSAGE();
 					continue;

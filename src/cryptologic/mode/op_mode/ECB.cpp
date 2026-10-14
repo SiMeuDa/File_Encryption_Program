@@ -1,4 +1,4 @@
-#include "cryptologic/mode/ECB.h"
+#include "cryptologic/mode/op_mode/ECB.h"
 #include "cryptologic/mode/mode.h"
 #include "cryptologic/crypto.h"
 

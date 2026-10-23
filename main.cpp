@@ -7,6 +7,8 @@
 //operation modes
 #include "cryptologic/mode/mode.h"
 #include "cryptologic/mode/op_mode/CTR.h"
+#include "cryptologic/mode/op_mode/CBC.h"
+#include "cryptologic/mode/op_mode/CFB.h"
 #include "cryptologic/mode/op_mode/ECB.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"
@@ -85,17 +87,20 @@ int main(void)
 			m.op_mode(choice);
 			try{
 				if(choice == 1){
+					//ECB
 					op_mode = new ECB(cLog, key);
 				}else if(choice == 2){
-					m.MESSAGE();
-					continue;
+					//CBC
+					op_mode = new CBC(cLog, key);
 				}else if(choice == 3){
-					m.MESSAGE();
-					continue;
+					//CFB
+					op_mode = new CFB(cLog, key);
 				}else if(choice == 4){
+					//OFB
 					m.MESSAGE();
 					continue;
 				}else if(choice == 5){
+					//CTR
 					op_mode = new CTR(cLog, key);
 				}else if(choice == 9){
 					m.MESSAGE("Go Back to Main Menu...", 1);
@@ -121,7 +126,8 @@ int main(void)
 			}
 
 			delete op_mode;
-			
+			delete[] key;
+
 			end = std::chrono::high_resolution_clock::now();
 
 			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -135,9 +141,8 @@ int main(void)
 
 			if(choice == 1){
 			//Setting file path
-				while(!setPath(p));
-				isSetFile = true;
-
+				if(setPath(p))
+					isSetFile = true;
 			}else if(choice == 2){
 				if(!isSetFile){
 					m.MESSAGE("There is no set file path", -1);
@@ -174,9 +179,13 @@ bool setPath(fs::path& p)
 {
 //change to show saved path and add or delete path
 	std::string path_str;
-	std::cout << "File Path: ";
+	std::cout << "File Path(type eof go menu): ";
 
 	std::cin >> path_str;
+	if(path_str.compare("eof") == 0
+	|| path_str.compare("EOF") == 0)
+		return false;
+
 	p = path_str;
 
 	try{
@@ -206,8 +215,8 @@ bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
 	//1024 * 1024 byte = 1024 KB = 1 MB
-	block rd_buffer = new uint8_t[buffer_size];
-	block wt_buffer = new(std::nothrow) uint8_t[buffer_size];
+	block rd_buffer = new uint8_t[buffer_size]();
+	block wt_buffer = new(std::nothrow) uint8_t[buffer_size]();
 	if(wt_buffer == nullptr)
 	{
 		delete[] rd_buffer;

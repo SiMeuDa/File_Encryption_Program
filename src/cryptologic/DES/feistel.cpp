@@ -269,7 +269,7 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 
 uint64_t feistel::round(uint64_t msg, const std::array<uint64_t, repeat>& key)
 {
-	uint32_t L = 0, R = 0, temp;
+	uint32_t L = 0, R = 0, temp = 0;
 	uint64_t result = 0;
 	
 	//divide L, R for each 32bit

@@ -22,40 +22,43 @@ void menu::main(int& choice)
 
 void menu::take_hex(block key)
 {
-	std::string raw_buffer, buffer;
+	std::string raw_buffer = "", buffer = "";
 
 	bool isHex = false;
 	
+	std::cin.ignore();
 	do{
 		std::cout << "Key Input(0x~): ";
-	
+
 		std::getline(std::cin, raw_buffer);
-
-		if(raw_buffer.find("0x") == 0)
+		
+		if(raw_buffer.length() == 18)
 		{
-			buffer = raw_buffer.substr(2);
-
-			if(buffer.length() == 16)
+			if(raw_buffer[0] == '0' && raw_buffer[1] == 'x')
 			{
+				buffer = raw_buffer.substr(2);
+
 				for(size_t i = 0; i < 16; i++)
 				{
 					if(!isxdigit(buffer[i]))
 					{
-						std::cout << "[ERROR]: Invalid Key Value (key contain non-hex value)" << std::endl;
+						std::cout << "[ERROR]: Invalid key value (key contain non-hex value)" << std::endl;
 						isHex = false;
 						break;
 					}else
 						isHex = true;
 				}
-			}
-			else{
-				std::cout << "[ERROR]: Invalid key value (input over key size)" << std::endl;
+			
+			}else{
+				std::cout << "[ERROR]: Invalid key value (key don't start with 0x)" << std::endl;
 			}
 		}else{
-			std::cout << "[ERROR]: Invalid Key Value (key don't start with 0x)" << std::endl;
+			std::cout << "[ERROR]: Invalid key value (input over key size)" << std::endl;
 		}
+
 	}while(!isHex);
 
+	//translate char to uint8_t value lambda func
 	auto to_hex = [](char c) -> uint8_t {
         	if (c >= '0' && c <= '9') return c - '0';
 		else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
@@ -82,8 +85,9 @@ void menu::take_key(crypto::crypto_logic cl, block& key)
 		repeat = 2;
 	else
 		return;
-	
-	key = new uint8_t[8 * repeat];
+
+	if(key == nullptr)
+		key = new uint8_t[8 * repeat];
 
 	for(size_t i = 0; i < repeat; i++)
 	{
@@ -145,11 +149,13 @@ void menu::setting(int& choice)
 
 void menu::information(void)
 {
+	std::cout << std::endl;
 	std::cout << "================== Information =================\n";
-	std::cout << "Made by\tYesung Kwon\n";
+	std::cout << "Made by\t\tYesung Kwon\n";
 	std::cout << "Coded by\tC++ language(17)\n";
-	std::cout << "Version\t1.0.1\n";
+	std::cout << "Version\t\t1.1.1\n";
 	std::cout << "================================================\n";
+	std::cout << std::endl;
 }
 
 void menu::safe_input(int& choice)

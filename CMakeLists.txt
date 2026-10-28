@@ -27,7 +27,12 @@ add_executable(File_Encryption_Program
 
     # Operation Modes
     src/cryptologic/mode/mode.cpp
-    src/cryptologic/mode/CTR.cpp
+
+    src/cryptologic/mode/op_mode/ECB.cpp
+    src/cryptologic/mode/op_mode/CTR.cpp
+    src/cryptologic/mode/op_mode/CBC.cpp
+    src/cryptologic/mode/op_mode/CFB.cpp
+    src/cryptologic/mode/op_mode/OFB.cpp
 
     # interface
     src/interface/menu.cpp

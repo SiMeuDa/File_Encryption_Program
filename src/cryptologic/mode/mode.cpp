@@ -19,6 +19,9 @@ mode::mode(crypto::crypto_logic cl, block key)
 		if(div_key[1] == nullptr)
 		{
 			delete[] div_key[0];
+			
+			div_key[1] = nullptr;
+			div_key[0] = nullptr;
 
 			throw std::bad_alloc();
 		}
@@ -34,7 +37,9 @@ mode::mode(crypto::crypto_logic cl, block key)
 		//div_key use only for making subkey(array) -> don't use again
 		delete[] div_key[1];
 		delete[] div_key[0];
-
+		div_key[1] = nullptr;
+		div_key[0] = nullptr;
+		
 		if(crypto_ptr == nullptr)
 			throw std::bad_alloc();
 
@@ -47,8 +52,8 @@ mode::mode(crypto::crypto_logic cl, block key)
 
 block mode::padding(block msg, size_t msg_size)
 {	
-	if(msg == nullptr)
-		return msg;
+	if((msg == nullptr) || (msg_size > 256))
+		throw std::invalid_argument("Invalid input value");
 	
 	//copy msg
 	//take padding number(PKCS#7 Standard)
@@ -62,13 +67,15 @@ block mode::padding(block msg, size_t msg_size)
 	for(size_t i = msg_size; i < msg_size + padding_num; i++)
 		result[i] = padding_num;
 
+	msg_size += padding_num;
+
 	return result;
 }
 
-block mode::unpadding(block msg, size_t msg_size)
+block mode::unpadding(block msg, size_t& msg_size)
 {
-	if(msg == nullptr || (msg_size % block_len != 0))
-		return msg;
+	if((msg == nullptr) || (msg_size % block_len != 0))
+		throw std::invalid_argument("Invalid Input value");
 
 	//take padding number(PKCS#7 Standard)
 	uint8_t padding_num = msg[msg_size - 1];
@@ -82,9 +89,11 @@ block mode::unpadding(block msg, size_t msg_size)
 		if(msg[i] != padding_num)
 			return msg;
 
-	block result = new uint8_t[msg_size - padding_num];
+	msg_size -= padding_num;
+	
+	block result = new uint8_t[msg_size];
 
-	std::memcpy(result, msg, msg_size - padding_num);
+	std::memcpy(result, msg, msg_size);
 
 	return result;
 }

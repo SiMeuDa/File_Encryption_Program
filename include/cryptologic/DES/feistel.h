@@ -19,7 +19,11 @@ private:
 
 	static uint32_t chg_F(uint32_t, uint64_t);
 protected:
-	feistel(){ if(isFirst) setSP(); }
+	feistel()
+	{ 
+		if(isFirst) 
+			setSP(); 
+	}
 	~feistel(){}
 
 

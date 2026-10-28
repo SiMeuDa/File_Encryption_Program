@@ -14,7 +14,7 @@ protected:
 	//need to free memory
 	block padding(block, size_t);
 	//need to free memory
-	block unpadding(block, size_t);
+	block unpadding(block, size_t&);
 
 	//return random value
 	//need to free memory
@@ -25,8 +25,21 @@ public:
 	mode(crypto::crypto_logic cl, block key);
 	virtual ~mode() { delete crypto_ptr; }
 
-	virtual void encrypt_mode(const block input, block& output, size_t& size, bool eof) = 0;
-	virtual void decrypt_mode(const block, block&, size_t&, bool) = 0;
+	virtual void encrypt_mode(
+			const block input, 
+			size_t input_size,
+			block& output, 
+			size_t& output_size,
+			bool eof
+	) = 0;
+
+	virtual void decrypt_mode(
+			const block input, 
+			size_t input_size,
+			block& ouptut, 
+			size_t& output_size,
+			bool eof
+	) = 0;
 
 /*
 	//Electric CodeBook mode

@@ -1,6 +1,6 @@
 ## 🛡️ File_Encryption_Program
 
-![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![C++](https://img.shields.io/badge/C%2B%2B-17%2F20-blue.svg) ![Security](https://img.shields.io/badge/Security-Cryptography-red.svg) ![Platform](https://img.shields.io/badge/Platform-Linux%20%2F%20Windows-lightgrey.svg)![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)
 
 
 **File_Encryption_Program**은 C++을 사용하여 고성능 암호화 및 복호화 기능을 제공하는 시스템 프로그래밍 프로젝트입니다. 블록 암호 알고리즘(3DES)을 직접 구현하였으며, 멀티스레딩를 적용했습니다.
@@ -26,27 +26,48 @@
 
 ```text
 .
-├── main.cpp          # 프로그램 진입점 및 CLI 인터페이스
+File_Encryption_Program/
+├── .gitignore
+├── CMakeLists.txt
+├── README.md
+├── main.cpp                        # 프로그램 진입점 및 CLI 인터페이스
 ├── include/
 │   ├── cryptologic/
-│   │   ├── DES/		           
-│   │   │   ├── festiel.cpp         # DES feistel 구조
-│   │   │   ├── DES.cpp             # DES 서브 구조 (IP, key scheduling, FP, etc...)
-│   │   │   └── Triple_DES.cpp      # Triple_DES 서브 구조 (기존 DES 사용)
-│   │   ├── mode/	           
-│   │   │   ├── mode.cpp            # 블럭 암호 운용 모드 Base
-│   │   │   ├── ECB.cpp             # Electric CodeBook mode
-│   │   │   ├── CBC.cpp             # Chain Block Chaining mode
-│   │   │   ├── CFB.cpp             # Cipher FeedBack mode
-│   │   │   ├── OFB.cpp             # Output FeedBack mode
-│   │   │   └── CTR.cpp             # CounTeR mode
-│   │   └──  crypto.h               # 암호화 Base
+│   │   ├── crypto.h                # 암호 알고리즘 Base
+│   │   ├── DES/
+│   │   │   ├── DES.h               # DES 메인 구조 (IP, Key Scheduling, FP, etc...)
+│   │   │   ├── Triple_DES.h        # 3DES 구조 (DES 객체)
+│   │   │   └── feistel.h           # feistel 구조
+│   │   └── mode/
+│   │       └── mode.h              # 블럭 암호 Operation Mode Base
+│   │          └── op_mode/
+│   │              ├── ECB.h        # Electric CodeBook mode
+│   │              ├── CFB.h        # Cipher FeedBack mode
+│   │              ├── CBC.h        # Chain Block Chaining mode
+│   │              ├── OFB.h        # Ouput FeedBack mode
+│   │              └── CTR.h        # CounTeR mode
 │   └── interface/
-│       ├── menu.cpp                # 메뉴 출력 & 색 지정
-│       └──  thread_queue.h         # 멀티스레딩용 queue
-├── test_case_generator/
-│       └── test.cpp               # 지정 단위 테스트 텍스트 파일 생성
-└── README.md
+│       ├── menu.h                  # 메뉴 출력 & 색 지정
+│       └── thread_queue.h          # 멀티스레딩 queue
+├── src/
+│   ├── cryptologic/
+│   │   ├── DES/
+│   │   │   ├── DES.cpp
+│   │   │   ├── Triple_DES.cpp
+│   │   │   └── feistel.cpp
+│   │   └── mode/
+│   │       └── mode.cpp              
+│   │          └── op_mode/
+│   │              ├── ECB.cpp        
+│   │              ├── CFB.cpp        
+│   │              ├── CBC.cpp        
+│   │              ├── OFB.cpp        
+│   │              └── CTR.h        
+│   └── interface/
+│       └── menu.cpp
+└── test_generator/
+    └── test.cpp
+
 ```
 
 ## 💻 Usage

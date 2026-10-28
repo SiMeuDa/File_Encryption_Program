@@ -6,7 +6,11 @@
 //#incldue "cryptologic/AES/AES_128.h"
 //operation modes
 #include "cryptologic/mode/mode.h"
-#include "cryptologic/mode/CTR.h"
+#include "cryptologic/mode/op_mode/CTR.h"
+#include "cryptologic/mode/op_mode/CBC.h"
+#include "cryptologic/mode/op_mode/CFB.h"
+#include "cryptologic/mode/op_mode/ECB.h"
+#include "cryptologic/mode/op_mode/OFB.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"
 #include <thread>
@@ -33,7 +37,7 @@
 namespace fs = std::filesystem;
 
 bool setPath(fs::path& p);
-bool do_stream(fs::path, std::function<void(const block, block&, size_t&, bool)>);
+bool do_stream(fs::path, std::function<void(const block, size_t, block&, size_t&, bool)>);
 
 int main(void)
 {
@@ -41,9 +45,9 @@ int main(void)
 	menu m;
 	int choice = 0;
 	uint64_t int_key = 0, int_key2 = 0;
-	block key;
+	block key = nullptr;
 	bool isSetFile = false, isEncryption = true;
-	mode* op_mode;
+	mode* op_mode = nullptr;
 	crypto::crypto_logic cLog;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	std::chrono::milliseconds duration;
@@ -68,14 +72,25 @@ int main(void)
 			//set Crypto Logic(DES, Triple DES, AES, etc..)
 			m.crypto_logic(choice);
 			
-			if(choice > static_cast<int>(crypto::crypto_logic::END) 
-			|| choice < static_cast<int>(crypto::crypto_logic::DES))
+			if(choice == 1)
+				cLog = crypto::crypto_logic::DES;
+			else if(choice == 2)
+				cLog = crypto::crypto_logic::Triple_DES;
+			else if(choice == 3)
+			{
+				m.MESSAGE();
+				continue;
+			}
+			else if(choice == 9)
+			{
+				m.MESSAGE("Return to Main menu", 1);
+				continue;
+			}
+			else
 			{
 				m.MESSAGE("Invalid Input", -1);
 				continue;
 			}
-			
-			cLog = static_cast<crypto::crypto_logic>(choice - 1);
 
 			//set Key Logic
 			m.take_key(cLog, key);
@@ -84,21 +99,29 @@ int main(void)
 			m.op_mode(choice);
 			try{
 				if(choice == 1){
-					m.MESSAGE();
-					continue;
+					//ECB
+					op_mode = new ECB(cLog, key);
 				}else if(choice == 2){
-					m.MESSAGE();
-					continue;
+					//CBC
+					op_mode = new CBC(cLog, key);
 				}else if(choice == 3){
-					m.MESSAGE();
-					continue;
+					//CFB
+					op_mode = new CFB(cLog, key);
 				}else if(choice == 4){
-					m.MESSAGE();
-					continue;
+					//OFB
+					op_mode = new OFB(cLog, key);
 				}else if(choice == 5){
+					//CTR
 					op_mode = new CTR(cLog, key);
 				}else if(choice == 9){
 					m.MESSAGE("Go Back to Main Menu...", 1);
+					delete[] key;
+					key = nullptr;
+					continue;
+				}else{
+					m.MESSAGE("Invalid input", -1);
+					delete[] key;
+					key = nullptr;
 					continue;
 				}
 			}catch(std::exception& e){
@@ -108,17 +131,19 @@ int main(void)
 			start = std::chrono::high_resolution_clock::now();
 			if(isEncryption)
 			{
-				do_stream(p, [op_mode](const block msg, block& output, size_t& size, bool eof) 
-				{ op_mode->encrypt_mode(msg, output, size, eof);});
+				do_stream(p, [op_mode](const block msg, size_t input_size, block& output, size_t& output_size, bool eof) 
+				{ op_mode->encrypt_mode(msg, input_size, output, output_size, eof);});
 			}
 			else
 			{
-				do_stream(p, [op_mode](const block msg, block& output, size_t& size, bool eof)
-				{ op_mode->decrypt_mode(msg, output, size, eof);});
+				do_stream(p, [op_mode](const block msg, size_t input_size, block& output, size_t& output_size, bool eof)
+				{ op_mode->decrypt_mode(msg, input_size, output, output_size, eof);});
 			}
 
 			delete op_mode;
-			
+			delete[] key;
+			key = nullptr;
+
 			end = std::chrono::high_resolution_clock::now();
 
 			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -132,9 +157,8 @@ int main(void)
 
 			if(choice == 1){
 			//Setting file path
-				while(!setPath(p));
-				isSetFile = true;
-
+				if(setPath(p))
+					isSetFile = true;
 			}else if(choice == 2){
 				if(!isSetFile){
 					m.MESSAGE("There is no set file path", -1);
@@ -171,9 +195,13 @@ bool setPath(fs::path& p)
 {
 //change to show saved path and add or delete path
 	std::string path_str;
-	std::cout << "File Path: ";
+	std::cout << "File Path(type eof go menu): ";
 
 	std::cin >> path_str;
+	if(path_str.compare("eof") == 0
+	|| path_str.compare("EOF") == 0)
+		return false;
+
 	p = path_str;
 
 	try{
@@ -194,17 +222,20 @@ bool setPath(fs::path& p)
 	return true;
 }
 
-bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool)> run)
+bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_t&, bool)> run)
 {
+	//file io
 	std::ofstream fout;
 	std::ifstream fin;
 	size_t buffer_size = 1024 * 256;
+	
 	//time check
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
+
 	//1024 * 1024 byte = 1024 KB = 1 MB
-	block rd_buffer = new uint8_t[buffer_size];
-	block wt_buffer = new(std::nothrow) uint8_t[buffer_size];
+	block rd_buffer = new uint8_t[buffer_size]();
+	block wt_buffer = new(std::nothrow) uint8_t[buffer_size]();
 	if(wt_buffer == nullptr)
 	{
 		delete[] rd_buffer;
@@ -225,6 +256,7 @@ bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool
 		fout.close();
 		return false;
 	}
+
 	while(true)
 	{
 		fin.read(reinterpret_cast<char*>(rd_buffer), buffer_size);
@@ -234,18 +266,21 @@ bool do_stream(fs::path p, std::function<void(const block, block&, size_t&, bool
 		if(raw_size <= 0)
 			break;
 			
-		size_t size = static_cast<size_t>(raw_size);
-
+		size_t input_size = static_cast<size_t>(raw_size);
+		size_t output_size = 0;
 		try{
+			//time checking
 			start = std::chrono::high_resolution_clock::now();
+
 			//do crypto logic (have exception logic)
-			run(rd_buffer, wt_buffer, size, fin.eof());
-
-			end = std::chrono::high_resolution_clock::now();
+			run(rd_buffer, input_size, wt_buffer, output_size, fin.eof());
 			
+			//time checking
+			end = std::chrono::high_resolution_clock::now();
 			duration += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-			fout.write(reinterpret_cast<char*>(wt_buffer), size);
+	
+			//file write
+			fout.write(reinterpret_cast<char*>(wt_buffer), output_size);
 		}catch(std::exception& e)
 		{
 			//close file

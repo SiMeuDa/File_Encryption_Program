@@ -228,7 +228,8 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 	std::ofstream fout;
 	std::ifstream fin;
 	size_t buffer_size = 1024 * 256;
-	
+	std::streamsize file_size, count = 0;
+	menu m;
 	//time check
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
@@ -247,13 +248,42 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 	temp_path += ".tmp";
 
 	fout.open(temp_path, std::ios::binary);
-	if(fout.fail())
+	if(fout.fail()){
+		delete[] rd_buffer;
+		rd_buffer = nullptr;
+
+		delete[] wt_buffer;
+		wt_buffer = nullptr;
 		return false;
+	}
 
 	fin.open(p, std::ios::binary);
 	if(fin.fail())
 	{
+		delete[] rd_buffer;
+		rd_buffer = nullptr;
+
+		delete[] wt_buffer;
+		wt_buffer = nullptr;
+
 		fout.close();
+		return false;
+	}
+
+	try{
+		file_size = fs::file_size(p);
+	}catch(const fs::filesystem_error& e){
+		std::cerr << menu::ANSI::RED << "[ERROR]: " << e.what() << menu::ANSI::COLOR_RESET << std::endl;
+		
+		delete[] rd_buffer;
+		rd_buffer = nullptr;
+
+		delete[] wt_buffer;
+		wt_buffer = nullptr;
+		
+		fin.close();
+		fout.close();
+
 		return false;
 	}
 
@@ -266,6 +296,11 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 		if(raw_size <= 0)
 			break;
 			
+	
+		count += raw_size;
+
+		m.loading(file_size, count);
+
 		size_t input_size = static_cast<size_t>(raw_size);
 		size_t output_size = 0;
 		try{

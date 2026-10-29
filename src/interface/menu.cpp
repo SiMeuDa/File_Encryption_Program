@@ -192,3 +192,25 @@ void menu::MESSAGE(const char* msg, int code)
 	}
 
 }
+
+void menu::loading(std::streamsize max_size, std::streamsize now_size)
+{
+	
+	//erase terminal
+	std::cout << menu::ANSI::SCR_RESET << menu::ANSI::CUR_HOME;
+	
+	std::cout << ANSI::YELLOW << "=================================" << ANSI::COLOR_RESET << std::endl;
+	std::cout << ANSI::YELLOW << "      Loading...( " << (static_cast<double>(now_size) / max_size) * 100
+	       	<< "%)" << ANSI::COLOR_RESET << std::endl;
+	std::cout << ANSI::YELLOW << "=================================" << ANSI::COLOR_RESET << std::endl;
+
+	if(max_size <= now_size)
+	{
+		//erase terminal
+		std::cout << ANSI::SCR_RESET << ANSI::CUR_HOME;
+		
+		std::cout << ANSI::GREEN << "=================================" << ANSI::COLOR_RESET << std::endl;
+		std::cout << ANSI::GREEN << "    Complete Crypto Logic... " << ANSI::COLOR_RESET << std::endl;
+		std::cout << ANSI::GREEN << "=================================" << ANSI::COLOR_RESET << std::endl << std::endl;
+	}
+}

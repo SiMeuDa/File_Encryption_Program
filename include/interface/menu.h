@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <cstdint>
+#include <iostream>
 #include "cryptologic/crypto.h"
 
 class menu{
@@ -34,6 +35,7 @@ public:
 	void op_mode(int&);
 	void setting(int&);
 	void information(void);
+	void loading(std::streamsize, std::streamsize);
 
 	void MESSAGE(const char* = "A", int = 0);
 };

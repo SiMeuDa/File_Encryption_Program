@@ -9,9 +9,15 @@
 class DES : public feistel, public crypto {
 private:
 	static constexpr size_t block_size = 8;
+	
+	static inline bool init_table = true;
+	static inline uint64_t IP_table[8][256];
+	static inline uint64_t FP_table[8][256];
 
 	std::array<uint64_t, 16> EnsubKey{};
 	std::array<uint64_t, 16> DesubKey{};
+
+	void set_IF(void);
 
 	bool chkParity(const block) override;
 //Left Circular Shift for 28 bit
@@ -29,7 +35,12 @@ private:
 	uint64_t FP(uint64_t);
 public:
 	//do s-p table caculate call in first time
-	DES() : feistel() {}
+	DES() : feistel() 
+	{ 
+		if(init_table)
+			set_IF();
+	}
+
 	DES(block key);
 	~DES();
 	void cipher(const block, block) override;

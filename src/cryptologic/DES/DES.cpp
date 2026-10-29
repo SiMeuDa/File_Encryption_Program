@@ -15,6 +15,67 @@ DES::DES(block key)
 
 DES::~DES() { crypto::secure_erase(EnsubKey); crypto::secure_erase(DesubKey); }
 
+void DES::set_IF(void)
+{
+	//Standard IP table
+	int I_table[64] = {
+                58, 50, 42, 34, 26, 18, 10, 2,
+                60, 52, 44, 36, 28, 20, 12, 4,
+                62, 54, 46, 38, 30, 22, 14, 6,
+                64, 56, 48, 40, 32, 24, 16, 8,
+                57, 49, 41, 33, 25, 17,  9, 1,
+                59, 51, 43, 35, 27, 19, 11, 3,
+                61, 53, 45, 37, 29, 21, 13, 5,
+                63, 55, 47, 39, 31, 23, 15, 7    
+	};
+
+	//Standard FP Table (inverse metrix of IP table)
+	int F_table[64] = {
+		40, 8, 48, 16, 56, 24, 64, 32,
+		39, 7, 47, 15, 55, 23, 63, 31,
+		38, 6, 46, 14, 54, 22, 62, 30,
+		37, 5, 45, 13, 53, 21, 61, 29,
+		36, 4, 44, 12, 52, 20, 60, 28,
+		35, 3, 43, 11, 51, 19, 59, 27,
+		34, 2, 42, 10, 50, 18, 58, 26,
+		33, 1, 41,  9, 49, 17, 57, 25	
+	};
+
+	uint64_t result = 0;
+
+	
+	for (int byte_pos = 0; byte_pos < 8; ++byte_pos) {
+	     	for (int val = 0; val < 256; ++val) {
+		    result = 0;
+		    for (int bit_idx = 0; bit_idx < 8; ++bit_idx) {
+			    int original_bit_pos = byte_pos * 8 + bit_idx; // 0 ~ 63
+		     	    if ((val >> (7 - bit_idx)) & 1) {
+				    for (int target_pos = 0; target_pos < 64; ++target_pos) {
+			     		    if (I_table[target_pos] - 1 == original_bit_pos) {
+						    result |= (1ULL << (63 - target_pos));
+        	}}}}
+                IP_table[byte_pos][val] = result;
+            }
+	}
+
+	for (int byte_pos = 0; byte_pos < 8; ++byte_pos) {
+	     	for (int val = 0; val < 256; ++val) {
+		    result = 0;
+		    for (int bit_idx = 0; bit_idx < 8; ++bit_idx) {
+			    int original_bit_pos = byte_pos * 8 + bit_idx; // 0 ~ 63
+		     	    if ((val >> (7 - bit_idx)) & 1) {
+				    for (int target_pos = 0; target_pos < 64; ++target_pos) {
+			     		    if (F_table[target_pos] - 1 == original_bit_pos) {
+						    result |= (1ULL << (63 - target_pos));
+        	}}}}
+                FP_table[byte_pos][val] = result;
+            }
+	}
+
+	init_table = false;
+
+}
+
 uint64_t DES::load64(block input)
 {
 	uint64_t result = 0;
@@ -54,24 +115,14 @@ uint32_t DES::LCS28(uint32_t value, size_t count)
 
 uint64_t DES::IP(uint64_t msg)
 {
-        //Standard IP Table
-        static int table[64] = {
-                58, 50, 42, 34, 26, 18, 10, 2,
-                60, 52, 44, 36, 28, 20, 12, 4,
-                62, 54, 46, 38, 30, 22, 14, 6,
-                64, 56, 48, 40, 32, 24, 16, 8,
-                57, 49, 41, 33, 25, 17,  9, 1,
-                59, 51, 43, 35, 27, 19, 11, 3,
-                61, 53, 45, 37, 29, 21, 13, 5,
-                63, 55, 47, 39, 31, 23, 15, 7
-                };
-        
-	uint64_t result = 0;
-        
-	for(int i = 0; i < 64; i++)
-		result |= ((msg >> (64 - table[i])) & 1ULL) << (63 - i);
-
-        return result;
+        return IP_table[0][(msg >> 56) & 0xFF] |
+               IP_table[1][(msg >> 48) & 0xFF] |
+               IP_table[2][(msg >> 40) & 0xFF] |
+               IP_table[3][(msg >> 32) & 0xFF] |
+               IP_table[4][(msg >> 24) & 0xFF] |
+               IP_table[5][(msg >> 16) & 0xFF] |
+               IP_table[6][(msg >>  8) & 0xFF] |
+               IP_table[7][(msg      ) & 0xFF];
 }
 
 void DES::keySchedule(block key)
@@ -144,24 +195,14 @@ void DES::keySchedule(block key)
 
 uint64_t DES::FP(uint64_t msg)
 {
-	//Stanard FP Table (inverse metrix of IP table)
-	static int table[64] = {
-		40, 8, 48, 16, 56, 24, 64, 32,
-		39, 7, 47, 15, 55, 23, 63, 31,
-		38, 6, 46, 14, 54, 22, 62, 30,
-		37, 5, 45, 13, 53, 21, 61, 29,
-		36, 4, 44, 12, 52, 20, 60, 28,
-		35, 3, 43, 11, 51, 19, 59, 27,
-		34, 2, 42, 10, 50, 18, 58, 26,
-		33, 1, 41,  9, 49, 17, 57, 25
-		};
-	
-	uint64_t result = 0;
-        
-	for(int i = 0; i < 64; i++)
-		result |= ((msg >> (64 - table[i])) & 1ULL) << (63 - i);
-        
-	return result;				
+        return FP_table[0][(msg >> 56) & 0xFF] |
+               FP_table[1][(msg >> 48) & 0xFF] |
+               FP_table[2][(msg >> 40) & 0xFF] |
+               FP_table[3][(msg >> 32) & 0xFF] |
+               FP_table[4][(msg >> 24) & 0xFF] |
+               FP_table[5][(msg >> 16) & 0xFF] |
+               FP_table[6][(msg >>  8) & 0xFF] |
+               FP_table[7][(msg      ) & 0xFF];
 }
 
 void DES::cipher(const block input, block output)

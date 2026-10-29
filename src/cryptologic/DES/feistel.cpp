@@ -254,16 +254,18 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 
 	uint32_t spboxRes = 0;
 	uint8_t index = 0;
-
+	
 	//pre-calculated table
-	for(int i = 0; i < 8; i++)
-	{
-		//shift for 6 bit
-		//xor subkey
-		index = ((X >> (28 - 4 * i)) ^ (subkey >> (6 * (7 - i)))) & 0x3F;;
-		spboxRes |= SP_table[i][index];
-	}
-
+	//shift for 6 bit & xor subekey
+	spboxRes |= SP_table[0][((X >> 28) ^ (subkey >> 42)) & 0x3F];
+	spboxRes |= SP_table[1][((X >> 24) ^ (subkey >> 36)) & 0x3F];
+	spboxRes |= SP_table[2][((X >> 20) ^ (subkey >> 30)) & 0x3F];
+	spboxRes |= SP_table[3][((X >> 16) ^ (subkey >> 24)) & 0x3F];
+	spboxRes |= SP_table[4][((X >> 12) ^ (subkey >> 18)) & 0x3F];
+	spboxRes |= SP_table[5][((X >> 8) ^ (subkey >> 12)) & 0x3F];
+	spboxRes |= SP_table[6][((X >> 4) ^ (subkey >> 6)) & 0x3F];
+	spboxRes |= SP_table[5][((X >> 0) ^ (subkey >> 0)) & 0x3F];
+	
 	return spboxRes;
 }
 

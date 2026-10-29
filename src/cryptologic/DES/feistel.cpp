@@ -264,7 +264,7 @@ uint32_t feistel::chg_F(uint32_t R, uint64_t subkey)
 	spboxRes |= SP_table[4][((X >> 12) ^ (subkey >> 18)) & 0x3F];
 	spboxRes |= SP_table[5][((X >> 8) ^ (subkey >> 12)) & 0x3F];
 	spboxRes |= SP_table[6][((X >> 4) ^ (subkey >> 6)) & 0x3F];
-	spboxRes |= SP_table[5][((X >> 0) ^ (subkey >> 0)) & 0x3F];
+	spboxRes |= SP_table[7][((X >> 0) ^ (subkey >> 0)) & 0x3F];
 	
 	return spboxRes;
 }
@@ -278,11 +278,13 @@ uint64_t feistel::round(uint64_t msg, const std::array<uint64_t, repeat>& key)
 	L = static_cast<uint32_t>((msg >> 32) & 0xFFFFFFFF);
 	R = static_cast<uint32_t>(msg & 0xFFFFFFFF);
 
+	const uint64_t* key_ptr = key.data();
+
 	//feistel structure
 	for(int i = 0; i < repeat; i++)
 	{
 		temp = R;
-		R = chg_F(R, key[i]);
+		R = chg_F(R, key_ptr[i]);
 		R = L ^ R;
 		L = temp;
 	}

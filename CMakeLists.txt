@@ -34,6 +34,9 @@ add_executable(File_Encryption_Program
     src/cryptologic/mode/op_mode/CFB.cpp
     src/cryptologic/mode/op_mode/OFB.cpp
 
+    # hash
+    src/cryptologic/HASH/HES/HES.cpp
+
     # interface
     src/interface/menu.cpp
 

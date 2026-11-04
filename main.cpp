@@ -11,6 +11,9 @@
 #include "cryptologic/mode/op_mode/CFB.h"
 #include "cryptologic/mode/op_mode/ECB.h"
 #include "cryptologic/mode/op_mode/OFB.h"
+//hash
+#include "cryptologic/HASH/hash.h"
+#include "cryptologic/HASH/HES/HES.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"
 #include <thread>

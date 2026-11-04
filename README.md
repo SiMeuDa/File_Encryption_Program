@@ -38,6 +38,10 @@ File_Encryption_Program/
 │   │   │   ├── DES.h               # DES 메인 구조 (IP, Key Scheduling, FP, etc...)
 │   │   │   ├── Triple_DES.h        # 3DES 구조 (DES 객체)
 │   │   │   └── feistel.h           # feistel 구조
+│   │   ├── HASH/
+│   │   │   ├── hash.h              # hash 함수 구조
+│   │   │   └── HES/
+│   │   │       └── HES.h           # DES 기반 hash 함수
 │   │   └── mode/
 │   │       └── mode.h              # 블럭 암호 Operation Mode Base
 │   │          └── op_mode/
@@ -55,6 +59,9 @@ File_Encryption_Program/
 │   │   │   ├── DES.cpp
 │   │   │   ├── Triple_DES.cpp
 │   │   │   └── feistel.cpp
+│   │   ├── HASH/
+│   │   │   └── HES/
+│   │   │       └── HES.cpp
 │   │   └── mode/
 │   │       └── mode.cpp              
 │   │          └── op_mode/

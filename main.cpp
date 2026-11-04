@@ -33,7 +33,7 @@
 #include <memory>
 #include <functional>
 
-
+using ck = std::chrono::steady_clock;
 namespace fs = std::filesystem;
 
 bool setPath(fs::path& p);
@@ -229,10 +229,11 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 	std::ifstream fin;
 	size_t buffer_size = 1024 * 256;
 	std::streamsize file_size, count = 0;
+
 	menu m;
+	bool eof = false;
 	//time check
-	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-	std::chrono::milliseconds duration = std::chrono::milliseconds::zero();
+	ck::duration crypto_duration = ck::duration::zero();
 
 	//1024 * 1024 byte = 1024 KB = 1 MB
 	block rd_buffer = new uint8_t[buffer_size]();
@@ -287,16 +288,15 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 		return false;
 	}
 
+	
+	
 	while(true)
 	{
 		fin.read(reinterpret_cast<char*>(rd_buffer), buffer_size);
 		//if use size_t, it can cause overflow
 		std::streamsize raw_size = fin.gcount();
+		eof = fin.eof();
 
-		if(raw_size <= 0)
-			break;
-			
-	
 		count += raw_size;
 
 		m.loading(file_size, count);
@@ -305,14 +305,13 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 		size_t output_size = 0;
 		try{
 			//time checking
-			start = std::chrono::high_resolution_clock::now();
-
+			auto start = ck::now();
+			
 			//do crypto logic (have exception logic)
-			run(rd_buffer, input_size, wt_buffer, output_size, fin.eof());
+			run(rd_buffer, input_size, wt_buffer, output_size, eof);
 			
 			//time checking
-			end = std::chrono::high_resolution_clock::now();
-			duration += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			crypto_duration += ck::now() - start;
 	
 			//file write
 			fout.write(reinterpret_cast<char*>(wt_buffer), output_size);
@@ -327,6 +326,9 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 			std::cerr << "[ERROR]: " << e.what() << std::endl;
 			return false;
 		}
+		if(eof)
+			break;
+
 	}
 	//close file
 	fout.close();
@@ -337,7 +339,7 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 
 	fs::rename(temp_path, p);
 
-	std::clog << menu::ANSI::BLUE << "[SYSTEM]: Crypto Logic Taken Time: " << duration.count()
+	std::clog << menu::ANSI::BLUE << "[SYSTEM]: Crypto Logic Taken Time: " << std::chrono::duration<double, std::milli>(crypto_duration).count()
 		<< "ms" << menu::ANSI::COLOR_RESET << std::endl;
 
 	return true;

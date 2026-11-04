@@ -5,19 +5,7 @@
 
 Triple_DES::Triple_DES(const block key, const block key2)
 {
-	if(key == nullptr ||
-	key2 == nullptr)
-		throw std::bad_alloc();
-
-	des_ptr[0] = new DES(key);
-
-	des_ptr[1] = new(std::nothrow) DES(key2);
-	if(des_ptr[1] == nullptr)
-	{
-		delete des_ptr[0];
-
-		throw std::bad_alloc();
-	}
+	chg_key(key, key2);
 }
 
 Triple_DES::~Triple_DES()
@@ -51,6 +39,24 @@ void Triple_DES::decipher(const block msg, block output)
 	des_ptr[1]->cipher(temp, temp);
 	des_ptr[0]->decipher(temp, output);
 	
+}
+
+void Triple_DES::chg_key(const block key, const block key2)
+{
+	if(key == nullptr ||
+	key2 == nullptr)
+		throw std::bad_alloc();
+
+	des_ptr[0] = new DES(key);
+
+	des_ptr[1] = new(std::nothrow) DES(key2);
+	if(des_ptr[1] == nullptr)
+	{
+		delete des_ptr[0];
+
+		throw std::bad_alloc();
+	}
+
 }
 
 bool Triple_DES::chkParity(const block key)

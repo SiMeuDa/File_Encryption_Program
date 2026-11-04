@@ -5,13 +5,11 @@
 
 DES::DES(block key)
 {
-	setParity(key);
+	if(init_table)
+		set_IF();
 
-	if(!chkParity(key))
-		throw std::invalid_argument("Invalid Key Value");
-
-	this->keySchedule(key);
-}
+	chg_key(key);
+}	
 
 DES::~DES() { crypto::secure_erase(EnsubKey); crypto::secure_erase(DesubKey); }
 
@@ -74,6 +72,16 @@ void DES::set_IF(void)
 
 	init_table = false;
 
+}
+
+void DES::chg_key(const block key)
+{
+	setParity(key);
+
+	if(!chkParity(key))
+		throw std::invalid_argument("Invalid Key Value");
+
+	this->keySchedule(key);
 }
 
 uint64_t DES::load64(block input)

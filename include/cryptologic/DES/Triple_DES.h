@@ -16,6 +16,7 @@ public:
 
 	void cipher(const block, block) override;
 	void decipher(const block, block) override;
+	void chg_key(const block, const block);
 	bool chkParity(const block) override;
 	size_t get_block_size(void) const noexcept override;
 };

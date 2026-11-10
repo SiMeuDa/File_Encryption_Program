@@ -1,25 +1,32 @@
 #ifndef HES_H
 #define HES_H
-#include "cryptologic/DES/DES.h"
+#include "cryptologic/HASH/HASH.h"
+#include "cryptologic/crypto.h"
 #include <cstdint>
+#include <string_view>
+#if __cplusplus >= 201703L
+#include <filesystem>
+#endif
 
 //merkle damgard construction
-class HES{
+class HES : public HASH{
 private:
-	DES* des_ptr;
-	size_t block_count;
-	uint8_t IV[8] = {0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE};
-	uint8_t* output;
+	block byte;
+	static constexpr uint8_t init_IV[8] = {0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE};
+	uint64_t total_len;
 
-	uint64_t merkle(uint64_t input);
 public:
-	HES();
+	HES(const crypto::crypto_logic& cLog);
 	~HES();
 	
 	//@param (uint8_t*)input: user input(no limit)
 	//@param (size_t)bit_len: bit length(full 64bit = 64)
-	//@return (uint8_t*) use uint8_t * 8 for compability to other crypto logic
-	uint64_t encrypt(uint64_t input, size_t bit_len, bool isLast);	
+	//@param (uint8_t*)output: hash function's output
+	void hash(block input, size_t bit_len, block output, bool isLast) override;	
+	void hash(std::string_view input, block output) override;
+#if __cplusplus >= 201703L
+	void hash(std::filesystem::path, block output) override;
+#endif
 };
 
 #endif

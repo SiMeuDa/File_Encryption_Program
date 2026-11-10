@@ -16,6 +16,11 @@ option(LOG "Enable logging features" OFF)
 # Main Program
 # ============================================================
 
+#if(LOG)
+#	add_compile_options(-fsanitize=address)
+#	add_link_options(-fsanitize=address)
+#endif()
+
 add_executable(File_Encryption_Program
 
     main.cpp
@@ -35,6 +40,7 @@ add_executable(File_Encryption_Program
     src/cryptologic/mode/op_mode/OFB.cpp
 
     # hash
+    src/cryptologic/HASH/HASH.cpp
     src/cryptologic/HASH/HES/HES.cpp
 
     # interface
@@ -44,7 +50,8 @@ add_executable(File_Encryption_Program
 
 if(LOG)
 	target_compile_definitions(File_Encryption_Program PRIVATE LOG)
-	target_compile_options(File_Encryption_Program PRIVATE -O0 -g)
+	target_compile_options(File_Encryption_Program PRIVATE -O0 -g) 
+# -fsanitize=address)
 else()
 	target_compile_options(File_Encryption_Program PRIVATE -O3 -march=native)
 endif()

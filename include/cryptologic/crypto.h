@@ -11,6 +11,7 @@ public:
 	virtual void cipher(const block, block) = 0;
 	virtual void decipher(const block, block) = 0;
 	virtual size_t get_block_size(void) const noexcept = 0;
+	virtual void chg_key(const block) = 0;
 	//check key's parity bits
 	virtual bool chkParity(const block) = 0;
 	virtual void setParity(block) = 0;

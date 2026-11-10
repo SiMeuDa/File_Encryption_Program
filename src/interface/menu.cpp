@@ -1,4 +1,6 @@
 #include "interface/menu.h"
+#include "cryptologic/HASH/HASH.h"
+#include "cryptologic/HASH/HES/HES.h"
 #include <iostream>
 #include <cstdint>
 #include <cctype>
@@ -6,6 +8,9 @@
 #include <string>
 #include <string_view>
 #include <limits>
+#if __cplusplus >= 201703L
+#include <filesystem>
+#endif
 
 void menu::main(int& choice)
 {
@@ -20,62 +25,12 @@ void menu::main(int& choice)
 
 }
 
-void menu::take_hex(block key)
+void menu::take_key(const crypto::crypto_logic& cl, block& key)
 {
-	std::string raw_buffer = "", buffer = "";
-
-	bool isHex = false;
-	
-	std::cin.ignore();
-	do{
-		std::cout << "Key Input(0x~): ";
-
-		std::getline(std::cin, raw_buffer);
-		
-		if(raw_buffer.length() == 18)
-		{
-			if(raw_buffer[0] == '0' && raw_buffer[1] == 'x')
-			{
-				buffer = raw_buffer.substr(2);
-
-				for(size_t i = 0; i < 16; i++)
-				{
-					if(!isxdigit(buffer[i]))
-					{
-						std::cout << "[ERROR]: Invalid key value (key contain non-hex value)" << std::endl;
-						isHex = false;
-						break;
-					}else
-						isHex = true;
-				}
-			
-			}else{
-				std::cout << "[ERROR]: Invalid key value (key don't start with 0x)" << std::endl;
-			}
-		}else{
-			std::cout << "[ERROR]: Invalid key value (input over key size)" << std::endl;
-		}
-
-	}while(!isHex);
-
-	//translate char to uint8_t value lambda func
-	auto to_hex = [](char c) -> uint8_t {
-        	if (c >= '0' && c <= '9') return c - '0';
-		else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-		else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        	return 0;
-  	  };
-	
-	for(int i = 0; i < 8; i++)
-	{
-		key[i] = to_hex(buffer[2 * i]) << 4;
-		key[i] |= to_hex(buffer[2 * i + 1]);
-	}
-}
-
-void menu::take_key(crypto::crypto_logic cl, block& key)
-{
-	block key_buffer = new uint8_t[8];
+	std::string str = "";
+	bool eof = false;
+	HASH* h = nullptr;
+        h = new HES(cl);
 
 	size_t repeat = 0;
 
@@ -83,20 +38,44 @@ void menu::take_key(crypto::crypto_logic cl, block& key)
 		repeat = 1;
 	else if(cl == crypto::crypto_logic::Triple_DES)
 		repeat = 2;
-	else
-		return;
+	else{
+		delete h;
+		h = nullptr;
+
+		throw std::invalid_argument("invalid crypto logic");
+	}	
+	
 
 	if(key == nullptr)
-		key = new uint8_t[8 * repeat];
-
-	for(size_t i = 0; i < repeat; i++)
 	{
-		take_hex(key_buffer);
+		key = new(std::nothrow) uint8_t[8 * repeat];
+		if(key == nullptr)
+		{
+			delete h;
+			h = nullptr;
 
-		std::memcpy(key + (8 * i), key_buffer, 8);
+			throw std::bad_alloc();
+		}
 	}
 
-	delete[] key_buffer;
+	std::cin.ignore();
+	std::cout << "key: ";
+	
+	getline(std::cin, str);
+	if(str != "file")
+		h->hash(std::string_view(str), key);
+#if __cplusplus >= 201703L
+	else
+	{
+		std::cout << "file path: ";
+		getline(std::cin, str);
+
+		h->hash(std::filesystem::path(str), key);
+	}
+#endif
+
+	delete h;
+	h = nullptr;
 }
 
 void menu::crypto_logic(int& choice)
@@ -190,6 +169,14 @@ void menu::MESSAGE(const char* msg, int code)
 		std::cerr << ANSI::RED << "[SYSTEM]: ERROR OCCUR" << std::endl;
 		std::cerr << "[ERROR MSG]: " << msg << ANSI::COLOR_RESET << std::endl;
 	}
+
+}
+
+void menu::MESSAGE(std::exception& e)
+{
+	std::cerr << ANSI::RED << "[SYSTEM]: ERROR OCCUR" << std::endl;
+	std::cerr << "[ERROR MSG]: " << e.what() << ANSI::COLOR_RESET << std::endl;
+	
 
 }
 

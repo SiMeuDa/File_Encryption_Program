@@ -4,12 +4,12 @@
 #include <string_view>
 #include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include "cryptologic/crypto.h"
 
 class menu{
 private:
 	void safe_input(int&);
-	void take_hex(block);
 public:
 	struct ANSI
 	{
@@ -30,7 +30,7 @@ public:
 	};
 
 	void main(int&);
-	void take_key(crypto::crypto_logic, block&);
+	void take_key(const crypto::crypto_logic&, block&);
 	void crypto_logic(int&);
 	void op_mode(int&);
 	void setting(int&);
@@ -38,5 +38,6 @@ public:
 	void loading(std::streamsize, std::streamsize);
 
 	void MESSAGE(const char* = "A", int = 0);
+	void MESSAGE(std::exception&);
 };
 #endif

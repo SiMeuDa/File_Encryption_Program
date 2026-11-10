@@ -5,7 +5,14 @@
 
 Triple_DES::Triple_DES(const block key, const block key2)
 {
-	chg_key(key, key2);
+	uint8_t integrate_key[16];
+	for(int i = 0; i < block_size; i++)
+	{
+		integrate_key[i] = key[i];
+		integrate_key[i + block_size] = key2[i];
+	}
+
+	chg_key(integrate_key);
 }
 
 Triple_DES::~Triple_DES()
@@ -41,15 +48,14 @@ void Triple_DES::decipher(const block msg, block output)
 	
 }
 
-void Triple_DES::chg_key(const block key, const block key2)
+void Triple_DES::chg_key(const block key)
 {
-	if(key == nullptr ||
-	key2 == nullptr)
+	if(key == nullptr)
 		throw std::bad_alloc();
 
 	des_ptr[0] = new DES(key);
 
-	des_ptr[1] = new(std::nothrow) DES(key2);
+	des_ptr[1] = new(std::nothrow) DES(key + block_size);
 	if(des_ptr[1] == nullptr)
 	{
 		delete des_ptr[0];

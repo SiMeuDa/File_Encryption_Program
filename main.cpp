@@ -12,7 +12,7 @@
 #include "cryptologic/mode/op_mode/ECB.h"
 #include "cryptologic/mode/op_mode/OFB.h"
 //hash
-#include "cryptologic/HASH/hash.h"
+#include "cryptologic/HASH/HASH.h"
 #include "cryptologic/HASH/HES/HES.h"
 //muti-threading queue
 //#include "interface/thread_queue.h"
@@ -47,11 +47,10 @@ int main(void)
 	fs::path p;
 	menu m;
 	int choice = 0;
-	uint64_t int_key = 0, int_key2 = 0;
 	block key = nullptr;
 	bool isSetFile = false, isEncryption = true;
 	mode* op_mode = nullptr;
-	crypto::crypto_logic cLog;
+	crypto::crypto_logic cLog = crypto::crypto_logic::END;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	std::chrono::milliseconds duration;
 
@@ -96,8 +95,19 @@ int main(void)
 			}
 
 			//set Key Logic
-			m.take_key(cLog, key);
-			
+			try{
+				m.take_key(cLog, key);
+
+			}catch(std::exception& e){
+				m.MESSAGE(e.what(), -1);
+				if(key != nullptr)
+				{
+					delete[] key;
+					key = nullptr;
+				}
+				continue;
+			}
+
 			//set operation mode
 			m.op_mode(choice);
 			try{
@@ -128,7 +138,7 @@ int main(void)
 					continue;
 				}
 			}catch(std::exception& e){
-				std::cerr << "[ERROR]: " << e.what() << std::endl;
+				m.MESSAGE(e.what(), -1);
 				return -1;
 			}
 			start = std::chrono::high_resolution_clock::now();
@@ -198,6 +208,7 @@ bool setPath(fs::path& p)
 {
 //change to show saved path and add or delete path
 	std::string path_str;
+	menu m;
 	std::cout << "File Path(type eof go menu): ";
 
 	std::cin >> path_str;
@@ -217,7 +228,7 @@ bool setPath(fs::path& p)
 			throw std::runtime_error("Directory can't be En/Decrypted");
 		}
 	}catch(std::exception& e){
-		std::cerr << "[ERROR] " << e.what() << std::endl << std::endl;
+		m.MESSAGE(e.what(), -1);
 		return false;
 	}
 	std::cout << "\n[SYSTEM] Success To Setting File Path\nSet Path: " << fs::canonical(p) << "\n";
@@ -276,8 +287,8 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 
 	try{
 		file_size = fs::file_size(p);
-	}catch(const fs::filesystem_error& e){
-		std::cerr << menu::ANSI::RED << "[ERROR]: " << e.what() << menu::ANSI::COLOR_RESET << std::endl;
+	}catch(fs::filesystem_error& e){
+		m.MESSAGE(e.what(), -1);
 		
 		delete[] rd_buffer;
 		rd_buffer = nullptr;
@@ -326,7 +337,7 @@ bool do_stream(fs::path p, std::function<void(const block, size_t, block&, size_
 			//if exception occur, erase temp file
 			fs::remove(temp_path);
 
-			std::cerr << "[ERROR]: " << e.what() << std::endl;
+			m.MESSAGE(e.what(), -1);
 			return false;
 		}
 		if(eof)

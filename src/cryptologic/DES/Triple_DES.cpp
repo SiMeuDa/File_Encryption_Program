@@ -6,6 +6,7 @@
 Triple_DES::Triple_DES(const block key, const block key2)
 {
 	uint8_t integrate_key[16];
+
 	for(int i = 0; i < block_size; i++)
 	{
 		integrate_key[i] = key[i];
@@ -17,8 +18,16 @@ Triple_DES::Triple_DES(const block key, const block key2)
 
 Triple_DES::~Triple_DES()
 {
-	delete des_ptr[1];
-	delete des_ptr[0];
+	if(des_ptr[1] != nullptr)
+	{
+		delete des_ptr[1];
+		des_ptr[1] = nullptr;
+	}
+	if(des_ptr[0] != nullptr)
+	{
+		delete des_ptr[0];
+		des_ptr[0] = nullptr;
+	}
 }
 
 void Triple_DES::cipher(const block msg, block output)
@@ -52,6 +61,19 @@ void Triple_DES::chg_key(const block key)
 {
 	if(key == nullptr)
 		throw std::bad_alloc();
+	
+	//check des_ptr is null pointer
+	if(des_ptr[1] != nullptr)
+	{
+		delete des_ptr[1];
+		des_ptr[1] = nullptr;
+	}
+	
+	if(des_ptr[0] != nullptr)
+	{
+		delete des_ptr[0];
+		des_ptr[0] = nullptr;
+	}
 
 	des_ptr[0] = new DES(key);
 

@@ -5,15 +5,15 @@
 
 Triple_DES::Triple_DES(const block key, const block key2)
 {
-	uint8_t integrate_key[16];
+	des_ptr[0] = new DES(key);
 
-	for(int i = 0; i < block_size; i++)
+	des_ptr[1] = new(std::nothrow) DES(key2);
+	if(des_ptr[1] == nullptr)
 	{
-		integrate_key[i] = key[i];
-		integrate_key[i + block_size] = key2[i];
-	}
+		delete des_ptr[0];
 
-	chg_key(integrate_key);
+		throw std::bad_alloc();
+	}
 }
 
 Triple_DES::~Triple_DES()
@@ -62,28 +62,8 @@ void Triple_DES::chg_key(const block key)
 	if(key == nullptr)
 		throw std::bad_alloc();
 	
-	//check des_ptr is null pointer
-	if(des_ptr[1] != nullptr)
-	{
-		delete des_ptr[1];
-		des_ptr[1] = nullptr;
-	}
-	
-	if(des_ptr[0] != nullptr)
-	{
-		delete des_ptr[0];
-		des_ptr[0] = nullptr;
-	}
-
-	des_ptr[0] = new DES(key);
-
-	des_ptr[1] = new(std::nothrow) DES(key + block_size);
-	if(des_ptr[1] == nullptr)
-	{
-		delete des_ptr[0];
-
-		throw std::bad_alloc();
-	}
+	des_ptr[0]->chg_key(key);
+	des_ptr[1]->chg_key(key + block_size);
 
 }
 

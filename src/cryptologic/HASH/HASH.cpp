@@ -8,8 +8,6 @@
 
 HASH::HASH(const crypto::crypto_logic& cl, const block input_IV) : crypto_ptr(nullptr), IV(nullptr), block_bit(0)
 {
-	int a = 10;
-
 	if(cl == crypto::crypto_logic::DES)
 		crypto_ptr = new DES(input_IV);
 	else if(cl == crypto::crypto_logic::Triple_DES)

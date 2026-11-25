@@ -145,7 +145,7 @@ void menu::information(void)
 	std::cout << "================== Information =================\n";
 	std::cout << "Made by\t\tYesung Kwon\n";
 	std::cout << "Coded by\tC++ language(17)\n";
-	std::cout << "Version\t\t1.1.1\n";
+	std::cout << "Version\t\t1.1.2\n";
 	std::cout << "================================================\n";
 	std::cout << std::endl;
 }

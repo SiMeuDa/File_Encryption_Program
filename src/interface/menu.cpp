@@ -29,8 +29,7 @@ void menu::take_key(const crypto::crypto_logic& cl, block& key)
 {
 	std::string str = "";
 	bool eof = false;
-	HASH* h = nullptr;
-        h = new HES(cl);
+	HASH** h = nullptr;
 
 	size_t repeat = 0;
 
@@ -39,19 +38,24 @@ void menu::take_key(const crypto::crypto_logic& cl, block& key)
 	else if(cl == crypto::crypto_logic::Triple_DES)
 		repeat = 2;
 	else{
-		delete h;
-		h = nullptr;
-
 		throw std::invalid_argument("invalid crypto logic");
 	}	
-	
+
+	h = new HASH*[repeat];
+
+	for(int i = 0; i < repeat; i++)
+		h[i] = new HES();
 
 	if(key == nullptr)
 	{
 		key = new(std::nothrow) uint8_t[8 * repeat];
 		if(key == nullptr)
 		{
-			delete h;
+			for(int i = repeat - 1; i > 0; i--){
+				delete h[i];
+				h[i] = nullptr;
+			}
+			delete[] h;
 			h = nullptr;
 
 			throw std::bad_alloc();
@@ -59,22 +63,31 @@ void menu::take_key(const crypto::crypto_logic& cl, block& key)
 	}
 
 	std::cin.ignore();
-	std::cout << "key: ";
-	
-	getline(std::cin, str);
-	if(str != "file")
-		h->hash(std::string_view(str), key);
-#if __cplusplus >= 201703L
-	else
+
+	for(size_t i = 0; i < repeat; i++)
 	{
-		std::cout << "file path: ";
+		std::cout << "key: ";
+	
 		getline(std::cin, str);
+		if(str != "file")
+			h[i]->hash(std::string_view(str), key + 8 * i);
+#if __cplusplus >= 201703L
+		else
+		{
+			std::cout << "file path: ";
+			getline(std::cin, str);
 
-		h->hash(std::filesystem::path(str), key);
-	}
+			h[i]->hash(std::filesystem::path(str), key + 8 * i);
+		}
 #endif
+	}
 
-	delete h;
+	for(int i = repeat - 1; i >= 0; i--){
+		delete h[i];
+		h[i] = nullptr;
+	}
+
+	delete[] h;
 	h = nullptr;
 }
 

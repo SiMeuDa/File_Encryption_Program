@@ -12,11 +12,11 @@
 class HES : public HASH{
 private:
 	block byte;
-	static constexpr uint8_t init_IV[8] = {0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE};
+	static constexpr uint8_t init_IV[9] = {0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE, 0x00};
 	uint64_t total_len;
 
 public:
-	HES(const crypto::crypto_logic& cLog);
+	HES();
 	~HES();
 	
 	//@param (uint8_t*)input: user input(no limit)

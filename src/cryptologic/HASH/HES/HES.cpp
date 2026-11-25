@@ -9,7 +9,7 @@
 #endif
 
 //set crypto logic
-HES::HES(const crypto::crypto_logic& cLog) : HASH(cLog, const_cast<block>(init_IV)), total_len(0), byte(nullptr)
+HES::HES() : HASH(crypto::crypto_logic::DES, const_cast<block>(init_IV)), total_len(0), byte(nullptr) 
 {
 	byte = new uint8_t[block_bit];
 }
@@ -25,32 +25,37 @@ HES::~HES()
 void HES::hash(block input, size_t bit_len, block output, bool isLast)
 {
 
+	total_len += bit_len;
+
 	if(!isLast)
 	{ 
 		merkle(input, output); 
-		total_len += bit_len;
 		return;
 	}
 	else{
-		block size = new uint8_t[block_bit]();
+		block size = nullptr;
+	        if(size == nullptr)
+			size = 	new uint8_t[block_bit]();
+		
+		for(size_t i = 0; i < bit_len / 8; i++)
+			size[i] = input[i];
 
 		if(bit_len % 64)
 		{
 			//padding with last input
-			input[bit_len / 8] |= static_cast<uint8_t>(1ULL << (8 - (bit_len % 8)));
-			
-			merkle(input, output);
-
+			size[bit_len / 8] |= static_cast<uint8_t>(1ULL << (7 - (bit_len % 8)));
 		}
 		else
 		{
 			//last input
-			merkle(input, output);
+			merkle(size, output);
 			size[0] = 0x80;
 
-			//padding
-			merkle(size, output);
+			for(size_t i = 1; i < block_bit; i++)
+				size[i] = 0;
 		}
+		
+		merkle(size, output);
 		
 		std::memcpy(size, &total_len, sizeof(uint64_t));		
 		
@@ -91,9 +96,6 @@ void HES::hash(std::string_view str, block output)
 
 		hash(byte, real_size, output, eof);
 	}
-
-	delete[] byte;
-	byte = nullptr;
 }
 
 #if __cplusplus >= 201703L
